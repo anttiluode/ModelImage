@@ -46,7 +46,8 @@ input[type=range]{width:100%;display:block;accent-color:var(--mint);margin:6px 0
 <div class="stat"><strong id="two">0</strong><span>Candidate group relations</span></div>
 </div>
 <div class="controls">
-<button id="teach1">Teach 1 synthetic scene</button><button id="teach100" class="primary">Teach 100</button>
+<label for="trainWorld">Experience world</label><select id="trainWorld"><option value="parity">A · agreeing eyes</option><option value="opposite">B · opposite rule</option></select>
+<button id="teach1">Teach 1 synthetic scene</button><button id="teach100" class="primary">Teach 300</button>
 </div>
 <div class="controls">
 <label class="upload">Choose training photos<input type="file" id="trainFiles" accept="image/*" multiple></label>
@@ -78,7 +79,7 @@ input[type=range]{width:100%;display:block;accent-color:var(--mint);margin:6px 0
 <section class="panel"><h2>2. Ask it to fill a missing piece</h2>
 <div class="controls">
 <label for="testType">Current test</label><select id="testType"><option value="synthetic">Synthetic unseen world</option><option value="photo">First held-out photo</option></select>
-<label for="occlusion">Occlusion</label><select id="occlusion"><option value="small">4×4 patches</option><option value="big">6×6 patches</option><option value="stripe">Wide stripe</option></select>
+<label for="testWorld">Synthetic world</label><select id="testWorld"><option value="parity">A</option><option value="opposite">B</option></select><label for="occlusion">Occlusion</label><select id="occlusion"><option value="small">4×4 patches</option><option value="big">6×6 patches</option><option value="stripe">Wide stripe</option></select>
 <button id="newTest" class="primary">New test scene</button></div>
 <div class="settings">
 <label>Local group flexibility <output id="defVal">1 patch</output><input type="range" min="0" max="1" step="1" value="1" id="deformation"></label>
@@ -143,10 +144,10 @@ async function showProgress(t,n,done){
 }
 async function trainSynthetic(n){
  if(training)return;training=true;
- const buttons=['teach1','teach100','teachPhotos','erase'];buttons.forEach(id=>$('#'+id).disabled=true);
+ const buttons=['teach1','teach100','teachPhotos','erase','trainWorld'];buttons.forEach(id=>$('#'+id).disabled=true);
  try{
   for(let i=1;i<=n;i++){
-   const world=trainId%2?'parity':'opposite';model.teach(makeWorld(5000+trainId*271,world));trainId++;
+   const world=$('#trainWorld').value;model.teach(makeWorld(5000+trainId*271,world));trainId++;
    await showProgress('synthetic images',n,i);
   }
   $('#status').textContent='Training complete. '+model.lessons+' experiences.\\nSpatial templates are reusable at new positions; learned relations are not tied to image coordinates.';
@@ -195,7 +196,7 @@ async function newTest(){
   if(!testingPhotos.length){$('#status2').textContent='Choose separate held-out photos before selecting photo test.';return;}
   test=await readImage(testingPhotos[testId%testingPhotos.length]);testId++;
  }else{
-  const world=testId%2?'parity':'opposite';
+  const world=$('#testWorld').value;
   test=makeWorld(770000+testId*541,world);testId++;
  }
  reconstruct();
@@ -253,9 +254,9 @@ async function benchmark(){
 }
 $('#trainFiles').onchange=e=>{trainingPhotos=Array.from(e.target.files||[]);$('#status').textContent=trainingPhotos.length+' training photographs selected. Their pixels stay inside the browser.';};
 $('#testFiles').onchange=e=>{testingPhotos=Array.from(e.target.files||[]);$('#benchmark').textContent=testingPhotos.length+' held-out photos selected. None are automatically added to training.';};
-$('#teach1').onclick=()=>trainSynthetic(1);$('#teach100').onclick=()=>trainSynthetic(100);$('#teachPhotos').onclick=trainPhotos;
+$('#teach1').onclick=()=>trainSynthetic(1);$('#teach100').onclick=()=>trainSynthetic(300);$('#teachPhotos').onclick=trainPhotos;
 $('#erase').onclick=()=>{if(training)return;model=new ResidueWorld();trainId=0;stats();$('#bar').style.width='0%';$('#status').textContent='All learned atoms and relation tables erased.';reconstruct();};
-$('#newTest').onclick=newTest;$('#runBenchmark').onclick=benchmark;$('#testType').onchange=newTest;$('#occlusion').onchange=reconstruct;
+$('#newTest').onclick=newTest;$('#runBenchmark').onclick=benchmark;$('#testType').onchange=newTest;$('#testWorld').onchange=newTest;$('#occlusion').onchange=reconstruct;
 for(const [id,out,label] of [['deformation','defVal',' patch'],['detail','detailVal','%'],['order','orderVal',' parts']]){
  $('#'+id).oninput=()=>{
   const v=$('#'+id).value;
