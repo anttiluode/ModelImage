@@ -112,7 +112,7 @@ function dictionary(){
   c.title='Codeword '+i+' · observed '+a.count+' times';
   list.append(c);
  });
- const img=learner.render(Array(NSITES).fill(learner.atoms.length?0:-1));
+ const img=learner.render(Array.from({length:NSITES},(_,i)=>learner.atoms.length?i%learner.atoms.length:-1));
  paint('#imagination',img);
 }
 async function train(name,n){
@@ -166,7 +166,6 @@ function completeCurrent(){
  }
  const single=models.A.complete(makeMasked(scene,holes),holes,1);
  paint('#pair',copyVisible(single.image,scene,holes));
- const truthCodes=models.A.encode(scene);
  const focus=scene.face.mouth;
  const foundA=result.A.provenance[focus];
  const foundB=result.B.provenance[focus];
@@ -209,7 +208,18 @@ async function gate(){
   }
   lines.push(world+' on held-out masked tile · two-context '+correct2+'/80 correct; one-context '+correct1+'/80; pixel MSE '+(mse2/80).toFixed(4)+' vs '+(mse1/80).toFixed(4));
  }
- $('#gateLog').textContent=lines.join('\n')+'\n\nEvaluation target indices are checked only after prediction. For natural photographs a much harder benchmark remains.';
+ let disagreements=0,correctA=0,correctB=0;
+ for(let k=0;k<80;k++){
+  const original=makeWorld(560001+k*191,'parity'),h=[original.face.mouth],visible=makeMasked(original,h);
+  const aa=models.A.complete(visible,h,2),bb=models.B.complete(visible,h,2);
+  if(maskedError(aa.image,bb.image,h)>.005)disagreements++;
+  const reference=models.A.encode(original)[h[0]];
+  if(aa.codes[h[0]]===reference)correctA++;
+  // Different codebooks may number equivalent glyphs differently. Compare generated pixels rather than token IDs.
+  if(maskedError(bb.image,original,h)<.0001)correctB++;
+ }
+ lines.push('Same visible eyes, conflicting histories: '+disagreements+'/80 different image predictions; A agrees with A-world target '+correctA+'/80.');
+ $('#gateLog').textContent=lines.join('\n')+'\n\nThis is a synthetic held-out test, not evidence of natural-image understanding.';
  b.disabled=false;
 }
 $('#teachA').onclick=()=>train('A',100);
