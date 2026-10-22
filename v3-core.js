@@ -129,21 +129,38 @@ class SparseRelations{
   }
   return best;
  }
- predict(codes,p,order=2){
+ predict(codes,p,order=2,deformation=0){
   const avail=[];
   for(let i=0;i<OFFSETS.length;i++){
    const q=atOffset(p,i);if(q>=0&&codes[q]>=0)avail.push([i,codes[q],q]);
   }
+  // Competing hypotheses are shared by every absolute position.
+  // Optional one-cell slack lets an experienced 2-part group deform locally;
+  // the search penalizes displacement rather than prespecifying a rigid shape.
+  const templates=(actual)=>OFFSETS.map((v,i)=>{
+    const dist=Math.abs(v[0]-OFFSETS[actual][0])+Math.abs(v[1]-OFFSETS[actual][1]);
+    return {i,dist};
+  }).filter(x=>x.dist<=deformation);
   let best=null;
+  const keep=(candidate,penalty,observed)=>{
+   if(!candidate)return;
+   const score=candidate.score-.22*penalty;
+   if(score>.1&&(!best||score>best.score))best={...candidate,score,deformation:penalty,observed};
+  };
   for(let i=0;i<avail.length;i++){
    const [d,a,site]=avail[i];
-   const c=this.lookup(this.one,d+'|'+a,1,[site]);
-   if(c&&(!best||c.score>best.score))best=c;
+   for(const t of templates(d)){
+    keep(this.lookup(this.one,t.i+'|'+a,1,[site]),t.dist,[d]);
+   }
    if(order===1)continue;
    for(let j=i+1;j<avail.length;j++){
     const [e,b,other]=avail[j];
-    const z=this.lookup(this.two,d+','+e+'|'+a+','+b,2,[site,other]);
-    if(z&&(!best||z.score>best.score))best=z;
+    for(const ti of templates(d))for(const tj of templates(e)){
+     if(ti.i===tj.i)continue;
+     const first=ti.i<tj.i?ti.i:tj.i,second=ti.i<tj.i?tj.i:ti.i;
+     const c1=ti.i<tj.i?a:b,c2=ti.i<tj.i?b:a;
+     keep(this.lookup(this.two,first+','+second+'|'+c1+','+c2,2,[site,other]),ti.dist+tj.dist,[d,e]);
+    }
    }
   }
   if(best)return best;
@@ -193,13 +210,13 @@ export class ResidueWorld{
  }
  // Proposal from learned atoms + adaptively selected, movable 1/2 context groups.
  // There is NO reference to target pixel content when the target is masked.
- complete(image,hidden,{order=2,detail=1,passes=3}={}){
+ complete(image,hidden,{order=2,detail=1,passes=3,deformation=0}={}){
   const mask=new Set(hidden),obs=this.recognize(image,hidden);
   const codes=obs.coarse.slice(),provenance=Array(CELLS).fill(null);
   for(let turn=0;turn<passes;turn++){
    const proposals=[];
    for(const p of mask)if(codes[p]<0){
-    const c=this.groups.predict(codes,p,order);
+    const c=this.groups.predict(codes,p,order,deformation);
     if(c.code>=0)proposals.push({p,...c});
    }
    proposals.sort((a,b)=>b.score-a.score);
