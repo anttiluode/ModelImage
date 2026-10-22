@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/test_core.mjs && node tests/test_learning.mjs && node tests/test_world.mjs"
+    "test": "node tests/test_core.mjs && node tests/test_learning.mjs && node tests/test_world.mjs && node tests/test_v3.mjs && node tests/test_v3_browser.mjs",
+    "photos:prepare": "python benchmarks/photo_dataset.py",
+    "photos:test": "node tests/test_v3_photos.mjs"
   }
 }

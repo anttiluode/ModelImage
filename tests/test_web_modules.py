@@ -19,7 +19,7 @@ thread.start()
 base = "http://127.0.0.1:" + str(server.server_port)
 
 try:
-    for module in ("core.js", "world-core.js"):
+    for module in ("core.js", "world-core.js", "v3-core.js"):
         with urlopen(f"{base}/{module}", timeout=5) as response:
             mime = response.headers.get_content_type()
             body = response.read().decode("utf-8")
@@ -30,6 +30,7 @@ try:
     for page, module in (
         ("index.html", "core.js"),
         ("world-model.html", "world-core.js"),
+        ("v3.html", "v3-core.js"),
     ):
         with urlopen(f"{base}/{page}", timeout=5) as response:
             html = response.read().decode("utf-8")

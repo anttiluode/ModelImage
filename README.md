@@ -166,3 +166,89 @@ py -m http.server 8000
 ```
 
 Then browse http://localhost:8000/world-model.html or http://localhost:8000/ and reload with **Ctrl+F5**. If port 8000 is already running, the existing server can usually serve the updated files; restart it only if necessary. The extension-originated `contentscript.js` listener warnings are unrelated to ModelImage. If a MIME failure persists, check the network response for `world-core.js`: it should respond with JavaScript content and a JavaScript MIME type, not `text/plain` or an HTML 404 page.
+
+---
+
+## V3 — Hierarchical, competitive, deformable sieve generation
+
+**[Open the V3 lab](v3.html)** · **[Read its engine](v3-core.js)** · **[Core tests](tests/test_v3.mjs)** · **[Real-photo transfer gate](tests/test_v3_photos.mjs)**.
+
+V1 rearranged given image tiles. V2 generated missing synthetic pixels by learning a discrete visual alphabet and three-part relations. V3 tests whether we can scale those two lessons toward real images *while preserving complete observability*. It has four independently inspectable components.
+
+### 1. Three progressive frequency/residue populations
+
+Each 96×96 image is divided into 12×12 position-independent 8×8 patches. The patch transform is additive:
+
+- **Coarse:** 2×2 RGB low-resolution representation (12 floats)
+- **Middle:** 4×4 RGB minus bilinear expansion of coarse (48 signed floats)
+- **Fine:** 8×8 RGB minus bilinear expansion of the 4×4 signal (192 signed floats)
+
+The explicit transform and its inverse are exact to floating-point precision before learned quantization. \`tests/test_v3.mjs\` verifies maximal error below 2×10⁻⁷. The learned dictionaries, however, **are lossy**. Don't confuse an invertible *sieve* with an invertible *trained model*.
+
+Each level owns a separate visual dictionary with capacity 48/64/80 atoms by default. At each observation the winner minimizes feature MSE. This is a **competitive Hebbian-like** update with bounded moving prototypes: \`w <- w + (rate/sqrt(1+hits/8)) * (x-w)\`, or a new atom when novelty exceeds its threshold and capacity allows. It is a centroid-learning mechanism, **not a demonstrated biological Hebbian synapse** or end-to-end task-gradient learner.
+
+### 2. Learned spatial groups, not fixed coordinates
+
+The coarse level observes 12 possible support displacements (eight local directions plus four distance-2 cardinal directions) around each center. A sparse online ledger accumulates observed **single-support** and **two-support** conditional target atom counts. Only eight randomly rotating two-support candidates per target site are recorded per experience, limiting growth. During reconstruction, rival hypotheses are scored by predictive lift against the target atom's global frequency, discounted by amount of experience. Candidate geometry is shared across the image; a pattern can move from upper left to lower right.
+
+The \`Local group flexibility\` slider allows a learned support offset to be matched with a **one-cell shift**, penalized by 0.22 score units per displaced cell. This is a real but restricted form of deformability—not optical flow, learned scale invariance, or unconstrained free-form object shape.
+
+A dedicated synthetic parity-with-shift gate checks the mechanism: a two-input relation learned at offsets −1 and +1 is later presented at −2 and +1. Rigid relations infer **2/4** correct combinations, while offset-flexible learned groups infer **4/4**. The rule is *not* supplied as a hand-coded product feature; it is acquired as a supported conditional relation.
+
+### 3. Generating hidden pixels, and checking trust
+
+All hidden 8×8 patches are omitted from \`recognize\` and its codebook lookup. The coarse atom for each missing patch is proposed from learned groups. The middle atom is chosen from its learned coarse→middle condition; the fine atom from its learned coarse+middle→fine condition. The inverse sieve renders newly generated pixels. **Original visible pixels are copied through unchanged**. Both intact-target-versus-masked-target controls and a visible-pixel identity check run in CI.
+
+We also implemented **Model 5-style trust gating**. On each inference, the model briefly hides several *still-visible* patches near the hole. It compares its own guesses for those probes against plain nearby-color interpolation. When learned completion predicts visible evidence poorly, the system does not trust its memory and instead uses the simpler interpolation. This is an empirical self-check of local predictive utility, **not proof that all future mistakes will be detected**.
+
+The GUI deliberately shows **raw model output, coarse-only output, one-support baseline, simple interpolation, and the trust-checked final**, side by side. The confidence evidence and selected source-fragment links are inspectable. The trust-checked output is not a separate trained model.
+
+### 4. Real-photo transfer: a negative gate we keep
+
+Reproduce with:
+
+\`\`\`bash
+python -m pip install scikit-image pillow numpy
+python benchmarks/photo_dataset.py
+node tests/test_v3.mjs
+node tests/test_v3_photos.mjs
+\`\`\`
+
+The benchmark loads **eight training photographs** from the scikit-image data gallery (astronaut, camera, coins, brick, grass, moon, immunohistochemistry, retina) and creates 96 deterministic, varied crops. It uses **four entirely different test photographs** (coffee, Chelsea cat, rocket, Hubble deep field), 12 crops and 24 masked-region tests. There are **no common original photographs** across train and test. We do not commit or redistribute their image files; the test script loads them from the installed public gallery.
+
+The first completed gate measured hidden-pixel mean squared error (smaller is better):
+
+| Method | MSE |
+|---|---:|
+| Learned two-support groups, all three levels | 0.03756 |
+| Learned one-support associations, all levels | 0.03222 |
+| Learned two-support groups, coarse only | 0.03391 |
+| Simple nearby-color interpolation, **no learned model** | **0.00916** |
+| Untrained prototype model | 0.09547 |
+| Learned model **with self-checked trust** | **0.00916** |
+
+**Result:** the new representation does **not** yet generalize better than plain interpolation on unseen real photographs. The two-support model was actually worse than the one-support model. In all 24 tests, the trust check correctly withheld the learned proposal and used the simple baseline (mean trust 0). This is encouraging for *rejecting unsupported memory* but is **not** improved image synthesis. On other scenes the same gate could still be wrong.
+
+The real-world wall is now measured: the model can learn a patch alphabet and repeated spatial associations yet still lack the capacity to build useful object-conditioned predictions from unfamiliar natural-image structure.
+
+### Synthetic multi-scale comparison — not all extensions help
+
+An additional exploratory 360-experience run on the V2-style synthetic face world was evaluated on 60 **new** images with the four 8×8 patches corresponding to the mouth hidden. Even though the learned spatial table contained thousands of supported candidate relations, V3's mean missing-pixel error was **0.09019** for two-support learned groups, **0.06344** for one-support groups, and **0.05814** for plain local interpolation. (Fixed seeds, deformation enabled for the two-support case.) This is a second failure of the **combined** V3 architecture, not a failure of the earlier V2 three-piece codeword demonstration.
+
+The likely bottleneck is representation alignment: the V2 glyphs occupied 16×16 coherent pieces, whereas V3 splits each glyph into four 8×8 codewords and currently conditions middle and fine residues on the coarse code alone. Identifying a conjunction in the learned coarse ledger does not yet force the generated high-frequency image to reflect the same multi-part explanation. The next research gate should explicitly compare whole-part representations, multiscale alignment, and joint conditional residue generation under matched capacities.
+
+### GUI
+
+Run a local server with \`py -m http.server 8000\` (Windows) or \`python -m http.server 8000\`. Open **http://localhost:8000/v3.html**. Both JavaScript files use \`.js\` imports and work with the stock Python server on Windows.
+
+- **Teach 300:** demonstrate a single learnable synthetic world. Choose A or B as the training history; deliberately test the other world to see the learned model's limitation.
+- **Choose training photos:** load several photographs. The browser makes three deterministic crops from each; their bytes stay in the browser.
+- **Choose held-out test photos:** select separate, genuinely unseen files. Evaluate held-out masked-patch reconstruction against untrained interpolation.
+- **Explore:** switch mask size, one/two supporting fragments, one-cell deformability, and fine residue strength. Click a missing patch in the sensor view to see which visible parts supported it.
+- **Erase experience:** discard every learned atom and relationship, leaving only the built-in inference procedure.
+
+The GUI does not upload photos, does not secretly train on held-out test images, and does not invent accuracy statistics. Its visual source links report actual chosen support positions.
+
+### What must happen next
+
+The evidence suggests several specific next experiments, not a claim of a finished image foundation model: learn conditional residues from *jointly changing views*, not just per-codeword frequency; compress candidate relations by predictive utility under a fixed parameter budget; evaluate real-object viewpoint and scale changes; and compare with matched lightweight convolutional/diffusion baselines. A system that learns reusable higher-level parts from natural images without hand-labels remains the open problem.

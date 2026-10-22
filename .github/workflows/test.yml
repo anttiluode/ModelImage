@@ -14,3 +14,11 @@ jobs:
       - run: node tests/test_learning.mjs
       - run: node tests/test_world.mjs
       - run: python3 tests/test_web_modules.py
+      - run: node tests/test_v3.mjs
+      - run: node tests/test_v3_browser.mjs
+      - name: Install real-photograph fixture dependencies
+        run: python3 -m pip install --quiet scikit-image pillow numpy
+      - name: Prepare disjoint real photographs from skimage gallery
+        run: python3 benchmarks/photo_dataset.py
+      - name: Evaluate held-out photograph transfer and leakage controls
+        run: node tests/test_v3_photos.mjs
