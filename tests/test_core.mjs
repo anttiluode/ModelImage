@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {GRID,SIDE,COUNT,random,synthetic,tiles,emptyModel,teach,solve,accuracy,advance,scrambled,drawParts,prototypeImage} from '../core.mjs';
+import {GRID,SIDE,COUNT,random,synthetic,tiles,emptyModel,teach,solve,accuracy,advance,scrambled,drawParts,prototypeImage} from '../core.js';
 assert.equal(COUNT,36);
 for(const theme of ['face','garden','city','abstract']){
  const img=synthetic(theme,42),parts=tiles(img);
