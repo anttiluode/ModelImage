@@ -100,3 +100,53 @@ The natural next model is a hierarchy of latent visual atoms that proposes confi
 - \`tests/test_learning.mjs\` — held-out ablations and nonleakage-related checks.
 
 MIT license. This work is a continuation of the [Sihti image lineage](https://github.com/anttiluode/SihtiImageModel5) and the higher-order relationship experiments in [ClaudeRepo1](https://github.com/anttiluode/ClaudeRepo1). Those related projects are not runtime dependencies.
+
+
+---
+
+## V2 — The world learns its missing pieces
+
+**[Open the generative completion lab](world-model.html)** (direct URL once GitHub Pages is enabled: https://anttiluode.github.io/ModelImage/world-model.html).
+
+The new page complements the original jigsaw assembler. **It generates genuinely missing pixels** from visual atoms learned in complete scenes; the tile to be predicted is absent from the inference input.
+
+### What is actually learned
+
+- A position-independent codebook of complete 16×16 RGB patch prototypes. A tile becomes a 4×4×RGB feature vector for matching but stores average **full-resolution patch pixels** for regeneration. When similar parts recur at different image positions, they refer to the same atom.
+- All one-neighbor and two-neighbor conditional co-occurrence tables across eight possible adjacent offsets, updated directly from complete observations. None of the candidate patterns is predesignated as a "face" or "eye–eye–mouth"; the learner has to select useful relations by observed predictive lift and repeated support.
+- Confidence and provenance for a reconstructed hidden tile: which atoms were observed, their positions, which candidate relation won and how many examples supported it.
+
+Training is **unsupervised codebook adaptation and local associative counting**; it is **not** end-to-end backpropagation, biological Hebbian synapses, or automatic discovery of the image's entire causal world. The synthetic generator *does* deliberately put a nonlinear eye/eye/mouth dependency into its own images. The learner gets raw RGB pixels only, never the rule or a label.
+
+### The decisive experiment
+
+The data generator creates scenes from a small alphabet of nine visual motifs: background, two eye appearances, two mouth appearances, a cheek and three distractors. It randomly translates the four-tile face group around a 6×6 scene. Mouth type is determined either by equality or inequality of the two eyes, depending on the world. All single-piece and pairwise statistics are uninformative about which world the image came from; the three-part relation separates the two.
+
+The learners see complete images with distractors, discover a codebook, and assess all neighboring one- and two-context associations. On a **new** image, the target mouth patch is completely masked; the original hidden pixels are not available to prediction. The hidden patch is reconstructed from a learned prototype, not moved from the existing input.
+
+**Exploratory reproducible benchmark (360 training scenes per world, 100 independent held-out examples):**
+
+| Gate | Two-context model | One-context control |
+|---|---:|---:|
+| World A, concealed mouth | **100 / 100** | 50 / 100 |
+| World B, concealed mouth | **100 / 100** | 50 / 100 |
+| Copy-world positive control | **100 / 100** | **100 / 100** |
+| World A, contiguous half-image occlusion, mean hidden-pixel MSE | 0.0634 | 0.0728 |
+
+A particularly useful check: presenting the **same** visible A-world scene to the learners trained in A and B produced different hidden-patch images in all 100 evaluated examples. The A-trained model agreed with the A-world target; the B model generally predicted the opposite history's missing piece. Identical present observations can produce different reconstructions after different experiences.
+
+**A critical caveat:** at 80 training scenes, one run had only 35/80 correct for the two-context method, versus 39/80 for the one-context method. The useful relation emerges with sufficient repeated experience; this is not magic instantaneous discovery or universally monotonic progress. The page includes a held-out 80-scene gate that is run on the exact models trained in your browser.
+
+**Nonleakage check:** swapping the target region with a blank patch before calling the inference engine produces the same predictions as giving it an intact image with those target coordinates explicitly masked. We also keep the ground truth only for evaluation and preserve all unmasked original pixels in the completed image. This is covered by the new Node test.
+
+### Run and inspect
+
+Start a local HTTP server: \`python -m http.server 8000\` and visit \`http://localhost:8000/world-model.html\`. Press **Teach both ×360**; inspect the learned nine or so visual atoms and the strongest selected source fragments; press **New unseen scene** to reveal the conflicting histories, or choose **Half the image** to explore more difficult and frequently incomplete reconstructions. **Erase experience** removes the learned dictionary and relation tables.
+
+To reproduce the Node tests: \`node tests/test_world.mjs\`. CI runs these alongside the original V1 tests.
+
+### Why this is not yet a general-purpose image model
+
+All nine source motifs recur with near-identical shape, translation occurs on a 16-pixel grid, and trained atoms are chosen from a small synthetic family. This setup makes it possible to test a higher-order relation without supplying that relation to the learner. It **does not demonstrate natural-image generalization**, full-scale object discovery, perspective invariance, a learned scale hierarchy, or generating truly unseen high-frequency texture. Capacity (24 learned atoms) and the candidate neighborhood geometry are engineered; combinatorial search beyond this small window remains unsolved.
+
+A next-stage real-image study should teach RGB patches at several scales, learn a resource-bounded set of relations with attention to context and viewpoint, use external held-out photographs, and compare to convolutional and patch-dictionary baselines at a matched memory budget. This makes the leap from an inspectable synthetic world to the proposed readable **sieve image model** measurable rather than rhetorical.
