@@ -46,3 +46,27 @@ assert.ok(Number.isFinite(maskedMSE(naive,test,mask)));
 const nothing=new ResidueWorld().complete(obs,mask,{deformation:1});
 assert.ok(Number.isFinite(maskedMSE(nothing.image,test,mask)));
 console.log('ModelImage V3: all hierarchy, competitive learning, deformation, and nonleakage checks passed');
+
+
+// DEFORMABLE GROUP CONTROL: a parity relation is learned with two support
+// fragments at x-1 and x+1. At inference one fragment moves to x-2.
+// Individual support-to-target associations are at chance. A learned
+// flexible two-part relation should recover all four combinations.
+const rel=new ResidueWorld().groups,origin=6+6*G,r=random(99);
+for(let i=0;i<480;i++){
+ const codes=Array(CELLS).fill(-1),left=i%2?2:3,right=Math.floor(i/2)%2?2:3;
+ codes[origin-1]=left;codes[origin+1]=right;codes[origin]=left===right?4:5;
+ rel.teach(codes,r);
+}
+let exact=0,flexible=0;
+for(const left of [2,3])for(const right of [2,3]){
+ const seen=Array(CELLS).fill(-1);
+ seen[origin-2]=left;seen[origin+1]=right;
+ const answer=left===right?4:5;
+ const rigid=rel.predict(seen,origin,2,0),deformed=rel.predict(seen,origin,2,1);
+ exact+=+(rigid.code===answer);flexible+=+(deformed.code===answer);
+ assert.equal(deformed.order,2);assert.equal(deformed.deformation,1);
+}
+console.log('Deformation generalization: rigid',exact+'/4; flexible',flexible+'/4');
+assert.equal(exact,2);
+assert.equal(flexible,4);
