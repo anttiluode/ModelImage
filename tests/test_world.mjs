@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {GRID,NSITES,makeWorld,MovingSieve,halfMask,maskedError,makeMasked,imagePatches,imageFromPatches,rng} from "../world-core.mjs";
+import {GRID,NSITES,makeWorld,MovingSieve,halfMask,maskedError,makeMasked,imagePatches,imageFromPatches,rng} from "../world-core.js";
 
 function train(world, n=360){
  const m=new MovingSieve();
