@@ -89,7 +89,7 @@ ol{color:var(--muted)}li{margin-bottom:7px}
 <p>Next: progressively finer residues, deformable group hypotheses, online Hebbian competition and tested real-image transfer. This page is a controlled first step toward a comprehensible generative image model, not a claim of qualia or new image-model state of the art.</p></details>
 </main>
 <script type="module">
-import {GRID,PATCH,WIDTH,NSITES,makeWorld,MovingSieve,halfMask,maskedError,makeMasked} from './world-core.mjs';
+import {GRID,PATCH,WIDTH,NSITES,makeWorld,MovingSieve,halfMask,maskedError,makeMasked} from './world-core.js';
 const $=s=>document.querySelector(s);
 const PALETTE={A:'parity',B:'opposite'};
 let models={A:new MovingSieve(),B:new MovingSieve()},serial={A:0,B:0},testSeed=0,scene=null,holes=[],selected=null,training=false;

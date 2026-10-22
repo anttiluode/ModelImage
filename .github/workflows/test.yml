@@ -13,3 +13,4 @@ jobs:
       - run: node tests/test_core.mjs
       - run: node tests/test_learning.mjs
       - run: node tests/test_world.mjs
+      - run: python3 tests/test_web_modules.py

@@ -113,7 +113,7 @@ footer{padding-top:28px;font-size:12px;color:var(--muted)}
 <footer>ModelImage · an experiment in readable, history-dependent computation · source on GitHub · no uploaded photos leave the browser.</footer>
 </main>
 <script type="module">
-import {GRID,SIDE,TILE,COUNT,synthetic,tiles,emptyModel,teach,solve,accuracy,energy,scrambled,advance,drawParts,prototypeImage} from './core.mjs';
+import {GRID,SIDE,TILE,COUNT,synthetic,tiles,emptyModel,teach,solve,accuracy,energy,scrambled,advance,drawParts,prototypeImage} from './core.js';
 const $=s=>document.querySelector(s);
 const el={lessons:$('#lessons'),correct:$('#correct'),error:$('#error'),objective:$('#objective'),message:$('#message'),log:$('#log'),memoryWeight:$('#memoryWeight'),seamWeight:$('#seamWeight'),theme:$('#theme')};
 let model=emptyModel(),testId=0,lessonImage=null,reference=null,parts=null,board=null,solution=null,moving=false,ticker=null,scores=[],photoTest=false;

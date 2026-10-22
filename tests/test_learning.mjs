@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {synthetic,tiles,emptyModel,teach,solve,COUNT,energy,accuracy,drawParts} from '../core.mjs';
+import {synthetic,tiles,emptyModel,teach,solve,COUNT,energy,accuracy,drawParts} from '../core.js';
 function train(theme,n=20){
  const model=emptyModel();
  for(let s=0;s<n;s++)teach(model,synthetic(theme,103+s*997));
