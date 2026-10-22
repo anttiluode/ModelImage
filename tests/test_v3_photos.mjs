@@ -11,7 +11,7 @@ function readPPM(file){
  }
  assert.equal(word(),'P6');const w=+word(),h=+word(),max=+word();
  assert.equal(w,96);assert.equal(h,96);assert.equal(max,255);
- at++;while(raw[at]===13||raw[at]===10)at++; // PPM header delimiter.
+ at++; // consume exactly one PPM whitespace delimiter; do not skip possible pixel values 10/13.
  const d=new Uint8ClampedArray(w*h*4);
  for(let i=0;i<w*h;i++)for(let c=0;c<3;c++)d[i*4+c]=raw[at+i*3+c];
  for(let i=0;i<w*h;i++)d[i*4+3]=255;
