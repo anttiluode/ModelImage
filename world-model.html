@@ -1,0 +1,254 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ModelImage · The world learns its pieces</title>
+<style>
+:root{color-scheme:dark;--bg:#0b131b;--card:#152531;--edge:#304754;--muted:#a8bdc7;--ink:#f1f5ec;--mint:#8ee3bc;--orange:#ffcc8f}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -30%,#244d42 0%,transparent 55%),var(--bg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+main{max-width:1320px;margin:auto;padding:24px 26px 70px}
+h1{font-size:clamp(32px,5.4vw,63px);letter-spacing:-.055em;line-height:1.04;margin:5px 0 16px}
+h2{font-size:20px;margin:0 0 6px;letter-spacing:-.025em}h3{font-size:13px;text-transform:uppercase;letter-spacing:.11em;color:var(--mint);margin:0 0 8px}
+p{margin:0 0 14px;max-width:70ch;color:var(--muted)}
+.hero{display:flex;justify-content:space-between;gap:20px;align-items:start;margin-bottom:18px}
+.eyebrow{color:var(--mint);font-weight:800;font-size:11px;letter-spacing:.25em}
+.links{max-width:230px;text-align:right;font-size:12px;color:var(--muted)}
+a{color:var(--mint)}
+.panel{border:1px solid var(--edge);border-radius:17px;padding:18px;background:linear-gradient(135deg,#172b37,#13212a);min-width:0}
+.layout{display:grid;grid-template-columns:330px 1fr;gap:16px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+button,select{border:1px solid #4b6874;border-radius:9px;padding:9px 12px;min-height:38px;color:var(--ink);background:#263b47;font:inherit;cursor:pointer}
+button:hover{background:#38535c}button:focus-visible,select:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+button.primary{color:#15382f;background:var(--mint);border-color:var(--mint);font-weight:800}
+button.primary:hover{background:#c9f5d9}button:disabled{opacity:.42;cursor:default}
+label{font-size:12px;color:var(--muted)}
+label select{margin-left:8px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:14px}
+.stat{padding:11px 13px;border-radius:11px;background:#10202b;border:1px solid #2b404b}
+.stat span{display:block;color:var(--muted);font-size:11px}
+.stat strong{font-size:25px;font-variant-numeric:tabular-nums}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.gallery{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.gallery canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;background:#080f16;border:1px solid #475c66;border-radius:3px}
+.viewgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-top:13px}
+figure{margin:0;min-width:0}figcaption{font-size:12px;color:var(--muted);margin-top:6px}
+canvas.scene{width:100%;aspect-ratio:1;image-rendering:pixelated;border:1px solid #3b5a65;border-radius:10px;background:#26333a;display:block}
+.viz{position:relative}
+#overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#learnlog,#gateLog{white-space:pre-wrap;font:12px/1.65 ui-monospace,Consolas,monospace;color:#b9d3ce;padding:12px;background:#0c1b25;border-radius:10px;min-height:80px;overflow-wrap:anywhere}
+#progress{height:7px;background:#334f57;border-radius:4px;overflow:hidden;margin-bottom:12px}
+#bar{height:100%;background:var(--mint);width:0%;transition:width .15s}
+#gateLog{min-height:100px}
+.subtle{font-size:12px}.strong{color:var(--ink);font-weight:700}
+details{border-top:1px solid var(--edge);margin-top:22px;padding-top:15px}
+summary{color:var(--mint);cursor:pointer;font-weight:700}
+ol{color:var(--muted)}li{margin-bottom:7px}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.links{text-align:left}.hero{display:block}}
+@media(max-width:610px){main{padding:16px}.viewgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:13px}.gallery{grid-template-columns:repeat(6,1fr)}}
+</style></head><body><main>
+<div class="hero"><div><div class="eyebrow">MODELIMAGE / EXPERIMENT 02</div><h1>The world learns<br>its missing pieces.</h1>
+<p>Two identical visual worlds, two different experiences. Neither learner is told which fragments form a face. It discovers recurring parts and tests possible relationships. Hide a fragment and inspect what the past makes it expect.</p></div>
+<div class="links"><a href="./index.html">← Original tile assembler</a><br><a href="https://github.com/anttiluode/ModelImage">Open source and test gates ↗</a><br>All processing happens inside your browser.</div></div>
+<div class="layout">
+<section class="panel"><h2>Teach two different histories</h2>
+<p>A and B see the same kinds of fragments and the same distractors. The only difference is a three-part rule. Training never supplies the rule or the names of the fragments.</p>
+<div class="stats"><div class="stat"><span>World A experiences</span><strong id="cntA">0</strong></div><div class="stat"><span>World B experiences</span><strong id="cntB">0</strong></div><div class="stat"><span>Distinct atoms A</span><strong id="atomsA">0</strong></div><div class="stat"><span>Distinct atoms B</span><strong id="atomsB">0</strong></div></div>
+<div class="row"><button id="teachA">Teach A ×100</button><button id="teachB">Teach B ×100</button><button id="teachBoth" class="primary">Teach both ×360</button></div>
+<div id="progress"><div id="bar"></div></div>
+<div class="row"><button id="clear">Erase experience</button><label for="show">Inspect dictionary</label><select id="show"><option value="A">World A</option><option value="B">World B</option></select></div>
+<h3>Learned movable fragments</h3>
+<p class="subtle">The dictionary below is learned from raw 16×16 RGB patches. Each codeword can be recognized in any position. It is not told the location or name of an eye, mouth, or distractor.</p>
+<div id="dictionary" class="gallery" aria-label="Learned pixel prototypes"></div>
+<div style="height:13px"></div><h3>Visible learning trace</h3>
+<div id="learnlog" aria-live="polite">No experience. Only sensor pixels and a fixed capacity to form visual atoms and test local associations.</div>
+</section>
+<section class="panel">
+<h2>Test what the system believes</h2>
+<p>Select a new world, then cover just the third fragment or hide half the image. Both learners receive the exact same observed pixels. The missing area is never available to their prediction code.</p>
+<div class="row"><label>Ground truth world <select id="testWorld"><option value="parity">A</option><option value="opposite">B</option><option value="copy">Copy control</option></select></label>
+<label>Obscure <select id="mask"><option value="mouth">One critical piece</option><option value="half">Half the image</option></select></label>
+<button id="new" class="primary">New unseen scene</button></div>
+<div class="viewgrid">
+<figure><div class="viz"><canvas class="scene" id="visible" width="96" height="96"></canvas><svg id="overlay" viewBox="0 0 96 96" aria-hidden="true"></svg></div><figcaption>What both learners see · holes masked</figcaption></figure>
+<figure><canvas class="scene" id="truth" width="96" height="96"></canvas><figcaption>Actual scene · only you can see it</figcaption></figure>
+<figure><canvas class="scene" id="pair" width="96" height="96"></canvas><figcaption>Pairwise-only completion (one context part)</figcaption></figure>
+<figure><canvas class="scene" id="compA" width="96" height="96"></canvas><figcaption>World A learned two-context completion</figcaption></figure>
+<figure><canvas class="scene" id="compB" width="96" height="96"></canvas><figcaption>World B learned two-context completion</figcaption></figure>
+<figure><canvas class="scene" id="imagination" width="96" height="96"></canvas><figcaption>Learned atoms alone · readable fragment vocabulary</figcaption></figure>
+</div>
+<div style="height:16px"></div>
+<h3>Which fragments explained the missing one?</h3>
+<div id="learnlog2" class="subtle" style="color:var(--muted);margin-bottom:12px">The outlined sensor fragments are the evidence selected by the strongest learned relation for A's missing piece.</div>
+<div class="row"><button id="gate" class="primary">Run held-out gate · 80 scenes</button></div>
+<div id="gateLog" aria-live="polite">Training first makes the test meaningful. For each learned world we measure the exact missing fragment code on unseen scenes against a one-context control. We also measure actual hidden-region pixel MSE.</div>
+</section>
+</div>
+<details><summary>How much is learned, and what are the limits?</summary>
+<ol><li><strong>Unsupervised atoms.</strong> Each patch is reduced to 4×4 RGB averages. Similar appearances form an online competitive codebook, and each codeword retains the average of its full-resolution 16×16 training pixels for generation. This is a readable patch dictionary, not a deep neural network.</li>
+<li><strong>Self-discovered local relationships.</strong> From complete training images, every spatial site tries all pairs of its eight neighbor offsets. It accumulates conditional counts and scores relations by their predictive lift over the frequency of the target atom, discounted by support. No privileged eye/eye/mouth offsets or product feature are inserted into the learner.</li>
+<li><strong>Completion.</strong> Visible patches are encoded once; hidden patches are replaced with learned codewords chosen using visible context, with the strongest relationships filled first. Predicted pixels come from the learned prototypes—not from the hidden sensor image or from an original tile supplied at test time.</li>
+<li><strong>Limits.</strong> This synthetic world deliberately reuses a small alphabet of 16×16 glyphs. Discovering an association here does not imply learning natural-image semantics. This model is still single-scale, local and discrete. Half-scene completions can be wrong or generic, and it has no mechanism yet for generating previously unseen detailed textures.</li>
+<li><strong>Controls.</strong> Two-input versus one-input inference on exactly the same learned observations; opposite worlds with identical individual and pairwise statistics; erased learners; held-out unseen seeds; a masked-pixel nonleakage test in CI. The geometry search has a fixed neighborhood radius, but the successful offset pair is selected from data.</li></ol>
+<p>Next: progressively finer residues, deformable group hypotheses, online Hebbian competition and tested real-image transfer. This page is a controlled first step toward a comprehensible generative image model, not a claim of qualia or new image-model state of the art.</p></details>
+</main>
+<script type="module">
+import {GRID,PATCH,WIDTH,NSITES,makeWorld,MovingSieve,halfMask,maskedError,makeMasked} from './world-core.mjs';
+const $=s=>document.querySelector(s);
+const PALETTE={A:'parity',B:'opposite'};
+let models={A:new MovingSieve(),B:new MovingSieve()},serial={A:0,B:0},testSeed=0,scene=null,holes=[],selected=null,training=false;
+function paint(id,img){if(!img)return;$(id).getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(img.data),WIDTH,WIDTH),0,0);}
+function note(msg){$('#learnlog').textContent=msg;}
+function update(){
+ for(const name of ['A','B']){
+  $('#cnt'+name).textContent=models[name].lessons;
+  $('#atoms'+name).textContent=models[name].atoms.length;
+ }
+ dictionary();
+}
+function dictionary(){
+ const list=$('#dictionary');list.replaceChildren();
+ const learner=models[$('#show').value];
+ learner.atoms.forEach((a,i)=>{
+  const c=document.createElement('canvas');c.width=PATCH;c.height=PATCH;
+  const ctx=c.getContext('2d');
+  ctx.putImageData(new ImageData(Uint8ClampedArray.from(a.pixels),PATCH,PATCH),0,0);
+  c.title='Codeword '+i+' · observed '+a.count+' times';
+  list.append(c);
+ });
+ const img=learner.render(Array.from({length:NSITES},(_,i)=>learner.atoms.length?i%learner.atoms.length:-1));
+ paint('#imagination',img);
+}
+async function train(name,n){
+ if(training)return;training=true;
+ const jobs=name==='both'?['A','B']:[name],total=jobs.length*n;
+ for(const id of ['teachA','teachB','teachBoth'])$('#'+id).disabled=true;
+ let done=0;
+ for(const key of jobs){
+  for(let k=0;k<n;k++){
+   const id=serial[key]++;
+   models[key].teach(makeWorld(100003+997*id,PALETTE[key]));
+   done++;
+   if(done%12===0||done===total){
+    $('#bar').style.width=(done/total*100)+'%';
+    note('Training '+name+'… '+done+'/'+total+' complete experiences. Each fragment is stored without a label; every site tests all available neighbor pairs.');
+    if(done%48===0||done===total){update();completeCurrent();}
+    await new Promise(resolve=>requestAnimationFrame(resolve));
+   }
+  }
+ }
+ training=false;
+ for(const id of ['teachA','teachB','teachBoth'])$('#'+id).disabled=false;
+ note('World A: '+models.A.lessons+' intact scenes; '+models.A.atoms.length+' movable atoms; '+models.A.binary.size+' encountered two-context conditions.\nWorld B: '+models.B.lessons+' scenes; '+models.B.atoms.length+' atoms; '+models.B.binary.size+' conditions.\nTry the same masked observation with both histories.');
+ update();completeCurrent();
+}
+function currentScene(){
+ testSeed++;
+ const world=$('#testWorld').value;
+ scene=makeWorld(776101+testSeed*1223,world);
+ holes=$('#mask').value==='mouth'?[scene.face.mouth]:halfMask(71+testSeed*103);
+ paint('#visible',makeMasked(scene,holes));paint('#truth',scene);
+ completeCurrent();
+}
+function copyVisible(pred,img,hidden){
+ const out=new Uint8ClampedArray(pred.data),hole=new Set(hidden);
+ for(let p=0;p<NSITES;p++)if(!hole.has(p)){
+  const gx=p%GRID,gy=Math.floor(p/GRID);
+  for(let y=0;y<PATCH;y++){
+   const start=((gy*PATCH+y)*WIDTH+gx*PATCH)*4;
+   out.set(img.data.subarray(start,start+PATCH*4),start);
+  }
+ }
+ return {...pred,data:out};
+}
+function completeCurrent(){
+ if(!scene)return;
+ const result={};
+ for(const name of ['A','B']){
+  const prediction=models[name].complete(makeMasked(scene,holes),holes,2);
+  result[name]=prediction;
+  paint('#comp'+name,copyVisible(prediction.image,scene,holes));
+ }
+ const single=models.A.complete(makeMasked(scene,holes),holes,1);
+ paint('#pair',copyVisible(single.image,scene,holes));
+ const focus=scene.face.mouth;
+ const foundA=result.A.provenance[focus];
+ const foundB=result.B.provenance[focus];
+ const describe=(name,src)=>{
+  const c=src.provenance[focus];
+  if(!c)return 'unobserved or not included in mask';
+  return 'code '+c.code+' · '+c.order+' context fragment(s) · '+c.positions.map(p=>'('+p%GRID+','+Math.floor(p/GRID)+')').join(' & ')+' · support '+c.support+' · lift score '+c.score.toFixed(2);
+ };
+ const obsCorrect=holes.includes(focus)?'the hidden critical tile':'another tile';
+ $('#learnlog2').textContent='A expects '+describe('A',result.A)+'\nB expects '+describe('B',result.B)+'\nPairwise A expects code '+(single.provenance[focus]?.code??'not masked')+'.\nThe original '+obsCorrect+' never participates in prediction.';
+ const svg=$('#overlay');svg.replaceChildren();
+ if(holes.includes(focus)&&foundA){
+  for(const p of foundA.positions){
+   const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+   rect.setAttribute('x',p%GRID*PATCH+1);rect.setAttribute('y',Math.floor(p/GRID)*PATCH+1);
+   rect.setAttribute('width',PATCH-2);rect.setAttribute('height',PATCH-2);
+   rect.setAttribute('fill','none');rect.setAttribute('stroke','#eeca73');rect.setAttribute('stroke-width','1.5');
+   svg.append(rect);
+   const link=document.createElementNS('http://www.w3.org/2000/svg','line');
+   link.setAttribute('x1',p%GRID*PATCH+PATCH/2);
+   link.setAttribute('y1',Math.floor(p/GRID)*PATCH+PATCH/2);
+   link.setAttribute('x2',focus%GRID*PATCH+PATCH/2);
+   link.setAttribute('y2',Math.floor(focus/GRID)*PATCH+PATCH/2);
+   link.setAttribute('stroke','#8ee3bc');link.setAttribute('stroke-width','1.1');
+   link.setAttribute('stroke-dasharray','2 2');
+   svg.append(link);
+  }
+  const target=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  target.setAttribute('x',focus%GRID*PATCH+1);
+  target.setAttribute('y',Math.floor(focus/GRID)*PATCH+1);
+  target.setAttribute('width',PATCH-2);target.setAttribute('height',PATCH-2);
+  target.setAttribute('stroke','#8ee3bc');target.setAttribute('stroke-width','1.6');target.setAttribute('fill','none');
+  svg.append(target);
+ }
+ const mseA=maskedError(result.A.image,scene,holes),mseB=maskedError(result.B.image,scene,holes),mse1=maskedError(single.image,scene,holes);
+ $('#gateLog').textContent='Current hidden region · pixel MSE (lower is better)\nA two-context: '+mseA.toFixed(4)+'\nB two-context: '+mseB.toFixed(4)+'\nA one-context: '+mse1.toFixed(4)+'\n\nThe target comes from the selected world; if the two worlds disagree, they should infer different missing pieces.';
+ dictionary();
+}
+async function gate(){
+ if(training)return;
+ const b=$('#gate');b.disabled=true;$('#gateLog').textContent='Evaluating fresh scenes…';
+ await new Promise(resolve=>requestAnimationFrame(resolve));
+ const lines=[];
+ for(const world of ['A','B']){
+  let correct2=0,correct1=0,mse2=0,mse1=0;
+  const model=models[world];
+  for(let k=0;k<80;k++){
+   const truth=makeWorld(560001+k*191,PALETTE[world]),h=[truth.face.mouth];
+   const observable=makeMasked(truth,h);
+   const a=model.complete(observable,h,2),baseline=model.complete(observable,h,1);
+   const target=model.encode(truth)[h[0]];
+   correct2+=(a.codes[h[0]]===target);correct1+=(baseline.codes[h[0]]===target);
+   mse2+=maskedError(a.image,truth,h);mse1+=maskedError(baseline.image,truth,h);
+  }
+  lines.push(world+' on held-out masked tile · two-context '+correct2+'/80 correct; one-context '+correct1+'/80; pixel MSE '+(mse2/80).toFixed(4)+' vs '+(mse1/80).toFixed(4));
+ }
+ let disagreements=0,correctA=0,correctB=0;
+ for(let k=0;k<80;k++){
+  const original=makeWorld(560001+k*191,'parity'),h=[original.face.mouth],visible=makeMasked(original,h);
+  const aa=models.A.complete(visible,h,2),bb=models.B.complete(visible,h,2);
+  if(maskedError(aa.image,bb.image,h)>.005)disagreements++;
+  const reference=models.A.encode(original)[h[0]];
+  if(aa.codes[h[0]]===reference)correctA++;
+  // Different codebooks may number equivalent glyphs differently. Compare generated pixels rather than token IDs.
+  if(maskedError(bb.image,original,h)<.0001)correctB++;
+ }
+ lines.push('Same visible eyes, conflicting histories: '+disagreements+'/80 different image predictions; A agrees with A-world target '+correctA+'/80.');
+ $('#gateLog').textContent=lines.join('\n')+'\n\nThis is a synthetic held-out test, not evidence of natural-image understanding.';
+ b.disabled=false;
+}
+$('#teachA').onclick=()=>train('A',100);
+$('#teachB').onclick=()=>train('B',100);
+$('#teachBoth').onclick=()=>train('both',360);
+$('#clear').onclick=()=>{
+ if(training)return;
+ models={A:new MovingSieve(),B:new MovingSieve()};serial={A:0,B:0};$('#bar').style.width='0%';
+ note('Memory erased. Every learned atom and predictive association has disappeared.');update();completeCurrent();
+};
+$('#show').onchange=dictionary;
+$('#mask').onchange=currentScene;
+$('#testWorld').onchange=currentScene;
+$('#new').onclick=currentScene;
+$('#gate').onclick=gate;
+update();currentScene();
+</script></body></html>
