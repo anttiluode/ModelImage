@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {GRID,NSITES,makeWorld,MovingSieve,halfMask,maskedError,makeMasked} from "../world-core.mjs";
+import {GRID,NSITES,makeWorld,MovingSieve,halfMask,maskedError,makeMasked,imagePatches,imageFromPatches,rng} from "../world-core.mjs";
 
 function train(world, n=360){
  const m=new MovingSieve();
@@ -45,3 +45,25 @@ for(const world of ["parity","opposite","copy"]){
 }
 assert.ok(pass,"Higher-order predictive relation failed to outperform pairwise on heldout parity.");
 console.log("Moving-part discovery tests passed.");
+
+
+// Shuffled-experience ablation. All visual atoms remain learnable;
+// the transferable spatial relationship is destroyed during training.
+const ordinary=new MovingSieve(),shuffled=new MovingSieve();
+for(let k=0;k<360;k++){
+ const image=makeWorld(100003+k*997,"parity");
+ ordinary.teach(image);
+ const bits=imagePatches(image),rand=rng(61001+k*397);
+ for(let j=bits.length-1;j>0;j--){
+  const i=Math.floor(rand()*(j+1));[bits[i],bits[j]]=[bits[j],bits[i]];
+ }
+ shuffled.teach(imageFromPatches(bits));
+}
+let originalMse=0,shuffledMse=0;
+for(let k=0;k<40;k++){
+ const truth=makeWorld(500004+k*913,"parity"),h=[truth.face.mouth],visible=makeMasked(truth,h);
+ originalMse+=maskedError(ordinary.complete(visible,h,2).image,truth,h);
+ shuffledMse+=maskedError(shuffled.complete(visible,h,2).image,truth,h);
+}
+console.log("Shuffled training control: real spatial relations hidden MSE "+(originalMse/40).toFixed(6)+", shuffled experience hidden MSE "+(shuffledMse/40).toFixed(6));
+assert.ok(shuffledMse>originalMse*10,"shuffling training fragments should destroy relational generalization");
