@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ModelImage V3 · A sieve world learning its own visual geometry</title>
+<style>
+:root{color-scheme:dark;--bg:#09121c;--panel:#132434;--edge:#2f4658;--ink:#ecf6f4;--muted:#9cb4be;--mint:#9ae8c2;--orange:#f2bd80}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 35% -10%,#1b4840 0%,transparent 60%),var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1450px;margin:auto;padding:22px 25px 60px}header{display:flex;gap:30px;justify-content:space-between;align-items:start;margin:0 0 20px}
+h1{font-size:clamp(32px,4.6vw,58px);letter-spacing:-.055em;line-height:1.07;margin:6px 0 14px}
+h2{font-size:19px;margin:0 0 7px}h3{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--mint);margin:0 0 10px}
+p{margin:0 0 14px;color:var(--muted);max-width:80ch}a{color:var(--mint)}.eyebrow{font-size:11px;color:var(--mint);letter-spacing:.24em;font-weight:900}
+small,.note{font-size:12px;color:var(--muted)}header nav{text-align:right;flex-shrink:0;font-size:12px}
+.layout{display:grid;grid-template-columns:350px minmax(0,1fr);gap:15px;align-items:start}.panel{border:1px solid var(--edge);border-radius:15px;background:linear-gradient(140deg,#172b3a,#111d28);padding:18px;min-width:0}.panel+.panel{margin-top:15px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:15px}
+.stat{background:#0c202a;border:1px solid #324852;border-radius:9px;padding:9px}.stat strong{display:block;font-size:23px;line-height:1.3;font-variant-numeric:tabular-nums}.stat span{display:block;font-size:10px;color:var(--muted)}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+button,select,.upload{font:inherit;font-size:12px;background:#243c4d;color:var(--ink);border:1px solid #476272;border-radius:8px;padding:8px 10px;cursor:pointer;min-height:36px}
+button:hover,.upload:hover{background:#325260}button:disabled{opacity:.43;cursor:default}
+button.primary{background:var(--mint);color:#12362f;font-weight:800;border-color:var(--mint)}
+button:focus-visible,select:focus-visible,.upload:focus-within{outline:2px solid var(--mint);outline-offset:2px}
+.upload{display:inline-block}.upload input{display:none}
+#status,#benchmark{white-space:pre-wrap;font:12px/1.58 ui-monospace,Consolas,monospace;color:#bfd4d5;background:#0b1b27;border:1px solid #284051;border-radius:9px;padding:12px;min-height:74px}
+#progress{height:6px;background:#294b54;border-radius:5px;overflow:hidden}.fill{width:0;height:100%;background:var(--mint);transition:width .15s}
+.bandstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0}.bandstat div{background:#0c1e2a;border-radius:8px;padding:8px;text-align:center}.bandstat b{display:block;font-size:20px}
+.bandstat small{font-size:10px}.gallery{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin-bottom:12px}
+.gallery canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;border:1px solid #34505f;background:#1c2931;border-radius:3px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+figure{margin:0;min-width:0}figure canvas{display:block;width:100%;aspect-ratio:1;border:1px solid #4d6570;border-radius:11px;background:#293841;image-rendering:pixelated}
+figcaption{font-size:12px;color:var(--muted);margin-top:6px}.over{position:relative}.over svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+input[type=range]{width:100%;display:block;accent-color:var(--mint);margin:6px 0}
+.settings{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:13px 0}
+.settings label{min-width:0;color:var(--muted);font-size:12px}.settings output{float:right;color:var(--mint)}
+#selected{color:var(--orange);font-size:12px;min-height:45px}details{border-top:1px solid var(--edge);margin-top:22px;padding-top:15px}summary{cursor:pointer;color:var(--mint);font-weight:700}
+@media(max-width:1050px){.layout{grid-template-columns:1fr}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:670px){main{padding:15px}header{display:block}header nav{text-align:left;margin:12px 0}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.settings{grid-template-columns:1fr}.panel{padding:13px}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style></head><body><main>
+<header><div><div class="eyebrow">MODELIMAGE · EXPERIMENT THREE · READABLE GENERATION</div>
+<h1>Let a world teach<br>its own visual structure.</h1>
+<p>A multi-frequency sieve, small competitive populations and movable relationship hypotheses. Train it on whole scenes, conceal part of a new one and watch its remembered structure propose the missing pixels.</p>
+</div><nav><a href="./index.html">Original assembler</a> · <a href="./world-model.html">V2 relational world</a><p style="margin-top:8px"><a href="https://github.com/anttiluode/ModelImage">Read the tests and source ↗</a></p></nav></header>
+<div class="layout">
+<div>
+<section class="panel"><h2>1. Give it experiences</h2><p>Every intact image updates three competitively learned visual dictionaries and the relations between them. Group candidates compete on how well they predict other fragments, rather than using semantic labels.</p>
+<div class="stats">
+<div class="stat"><strong id="lessons">0</strong><span>Complete experiences</span></div>
+<div class="stat"><strong id="one">0</strong><span>Spatial one-part rules</span></div>
+<div class="stat"><strong id="two">0</strong><span>Candidate group relations</span></div>
+</div>
+<div class="controls">
+<button id="teach1">Teach 1 synthetic scene</button><button id="teach100" class="primary">Teach 100</button>
+</div>
+<div class="controls">
+<label class="upload">Choose training photos<input type="file" id="trainFiles" accept="image/*" multiple></label>
+<button id="teachPhotos">Teach selected photos</button>
+</div>
+<div class="controls">
+<button id="erase">Erase experience</button>
+</div>
+<div id="progress"><div class="fill" id="bar"></div></div>
+<div id="status" aria-live="polite">No experiences. All three dictionaries start empty. Use a synthetic world first, or select several of your own photos.</div>
+<div style="height:14px"></div>
+<h3>The three learned frequency populations</h3>
+<p class="note">Coarse (2×2 per patch), middle residue (4×4), and fine residue (8×8). The synthesis reconstructs their sum; each prototype is inspectable and changes under competitive Hebbian adaptation.</p>
+<div class="bandstat">
+<div><b id="coarseCount">0</b><small>Coarse atoms</small></div>
+<div><b id="midCount">0</b><small>Middle atoms</small></div>
+<div><b id="fineCount">0</b><small>Fine atoms</small></div>
+</div>
+<h3>Coarse prototypes</h3><div id="coarseAtoms" class="gallery"></div>
+<h3>Middle residues</h3><div id="midAtoms" class="gallery"></div>
+<h3>Fine residues</h3><div id="fineAtoms" class="gallery"></div>
+</section>
+<section class="panel"><h2>3. Measure, don't guess</h2><p>When testing photographs, use images the learner has never been taught. Here you can choose separate test files. The benchmark compares pixel reconstruction error on hidden regions only.</p>
+<div class="controls"><label class="upload">Select held-out test photos<input type="file" id="testFiles" accept="image/*" multiple></label><button id="runBenchmark" class="primary">Run held-out photo gate</button></div>
+<div id="benchmark">Select unseen test photographs. The repo also includes a reproducible 12-image-crop benchmark from four completely held-out scikit-image photos; its CI measurements are reported separately from this browser session.</div>
+</section>
+</div>
+<div>
+<section class="panel"><h2>2. Ask it to fill a missing piece</h2>
+<div class="controls">
+<label for="testType">Current test</label><select id="testType"><option value="synthetic">Synthetic unseen world</option><option value="photo">First held-out photo</option></select>
+<label for="occlusion">Occlusion</label><select id="occlusion"><option value="small">4×4 patches</option><option value="big">6×6 patches</option><option value="stripe">Wide stripe</option></select>
+<button id="newTest" class="primary">New test scene</button></div>
+<div class="settings">
+<label>Local group flexibility <output id="defVal">1 patch</output><input type="range" min="0" max="1" step="1" value="1" id="deformation"></label>
+<label>Fine detail strength <output id="detailVal">100%</output><input type="range" min="0" max="1" step=".1" value="1" id="detail"></label>
+<label>Context groups <output id="orderVal">2 parts</output><input type="range" min="1" max="2" step="1" value="2" id="order"></label>
+</div>
+<div class="grid">
+<figure><canvas id="original" width="96" height="96"></canvas><figcaption>Actual image · evaluation only</figcaption></figure>
+<figure><div class="over"><canvas id="visible" width="96" height="96"></canvas><svg id="relOverlay" viewBox="0 0 96 96"></svg></div><figcaption>Visible sensor pixels · missing region blocked</figcaption></figure>
+<figure><canvas id="baseline" width="96" height="96"></canvas><figcaption>Nonlearned spatial-color interpolation</figcaption></figure>
+<figure><canvas id="coarse" width="96" height="96"></canvas><figcaption>Learned coarse reconstruction</figcaption></figure>
+<figure><canvas id="pair" width="96" height="96"></canvas><figcaption>One-part context + three-level synthesis</figcaption></figure>
+<figure><canvas id="prediction" width="96" height="96"></canvas><figcaption>Learned groups + coarse→middle→fine synthesis</figcaption></figure>
+</div>
+<div style="height:14px"></div>
+<h3>Which learned relationship did it use?</h3>
+<p class="note">Click a hidden position on the sensor image to inspect its chosen explanation. Solid turquoise lines show fragments the predictor used. If nothing meaningful has been learned, it will fall back to a generic atom rather than invent certainty.</p>
+<div id="selected">No relation selected yet.</div>
+<div id="status2" class="note">Mean squared pixel error is reported only inside the hidden mask. Lower is better. Visually attractive hallucinations can still score worse than simple interpolation.</div>
+</section>
+</div></div>
+<details><summary>Architecture and honest scope</summary>
+<p style="padding-top:12px">This is a small interpretable generative completion model, not a diffusion model or proof of conscious experience. Three scale-specific dictionaries learn through winner-take-all normalized Hebbian-style updates. The full 8×8 patch decomposes exactly into a 2×2 base, 4×4 intermediate residue and 8×8 fine residue. Generating a hidden patch uses a learned coarse code, the most frequent matching conditional middle code, and a conditional fine residue.</p>
+<p>Spatial templates are shared across all 12×12 patch positions and test candidate one- and two-part relations. One-patch geometric slack allows a limited form of deformation; this is <strong>not</strong> a learned continuous warp or a semantic object detector. Candidates win on predictive lift and support, not labels. Uploaded images remain in your browser and are not stored remotely.</p>
+<p>The hard problems remain: real-world scale/viewpoint invariance, discovery of higher-order objects without combinatorial explosion, meaningful conditional high-frequency generation, and consistent results against interpolation and convolutional baselines. The included held-out real-photo benchmark may reveal negative transfer. Failed gates are still results.</p>
+</details>
+</main>
+<script type="module">
+import {N,P,G,CELLS,ResidueWorld,sieve,synthesize,maskRectangle,maskedImage,maskedMSE,naiveCompletion} from './v3-core.js';
+import {makeWorld} from './world-core.js';
+const $=x=>document.querySelector(x);
+let model=new ResidueWorld(),training=false,trainId=0,testId=0,test=null,mask=[],output=null,trainingPhotos=[],testingPhotos=[],selectedPatch=null;
+const cv=(id,img)=>{if(img)$(id).getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(img.data),N,N),0,0);};
+const imgFromPatch=(raw)=>{
+ const d=new Uint8ClampedArray(P*P*4);for(let i=0;i<P*P;i++)for(let c=0;c<3;c++)d[i*4+c]=Math.round(Math.max(0,Math.min(1,raw[i*3+c]))*255);
+ for(let i=0;i<P*P;i++)d[i*4+3]=255;return new ImageData(d,P,P);
+};
+function drawAtomGallery(id,band){
+ const el=$(id);el.replaceChildren();
+ const atoms=model.bands[band].atoms.slice(0,18);
+ for(const atom of atoms){
+  const c=document.createElement('canvas');c.width=P;c.height=P;
+  let patch;
+  if(band===0)patch=synthesize(atom.w,null,null,0);
+  if(band===1)patch=synthesize(Array(12).fill(.5),atom.w,null,1);
+  if(band===2)patch=synthesize(Array(12).fill(.5),Array(48).fill(0),atom.w,1);
+  c.getContext('2d').putImageData(imgFromPatch(patch),0,0);
+  c.title='Winner-take-all atom · '+atom.hits+' observations';el.append(c);
+ }
+}
+function stats(){
+ const s=model.summary();
+ $('#lessons').textContent=s.lessons;$('#one').textContent=s.spatialPairs;$('#two').textContent=s.spatialTriples;
+ ['coarseCount','midCount','fineCount'].forEach((id,i)=>$('#'+id).textContent=s.atoms[i]);
+ drawAtomGallery('#coarseAtoms',0);drawAtomGallery('#midAtoms',1);drawAtomGallery('#fineAtoms',2);
+}
+async function showProgress(t,n,done){
+ $('#bar').style.width=Math.floor(100*done/n)+'%';
+ $('#status').textContent='Learning '+t+' · '+done+' / '+n+' experiences\\n'+JSON.stringify(model.summary(),null,1);
+ if(done%8===0||done===n){stats();await new Promise(resolve=>requestAnimationFrame(resolve));}
+}
+async function trainSynthetic(n){
+ if(training)return;training=true;
+ const buttons=['teach1','teach100','teachPhotos','erase'];buttons.forEach(id=>$('#'+id).disabled=true);
+ try{
+  for(let i=1;i<=n;i++){
+   const world=trainId%2?'parity':'opposite';model.teach(makeWorld(5000+trainId*271,world));trainId++;
+   await showProgress('synthetic images',n,i);
+  }
+  $('#status').textContent='Training complete. '+model.lessons+' experiences.\\nSpatial templates are reusable at new positions; learned relations are not tied to image coordinates.';
+  reconstruct();
+ }finally{training=false;buttons.forEach(id=>$('#'+id).disabled=false);}
+}
+async function readImage(file,variant=0){
+ const url=URL.createObjectURL(file);
+ return await new Promise((resolve,reject)=>{
+  const img=new Image();
+  img.onload=()=>{
+   try{
+    const canvas=document.createElement('canvas');canvas.width=N;canvas.height=N;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    const edge=Math.min(img.naturalWidth,img.naturalHeight),offset=.04*variant*edge;
+    const src=Math.max(8,edge*(1-.08*variant));
+    const sx=Math.max(0,(img.naturalWidth-src)/2+offset),sy=Math.max(0,(img.naturalHeight-src)/2-offset);
+    ctx.drawImage(img,sx,sy,src,src,0,0,N,N);
+    const data=ctx.getImageData(0,0,N,N);resolve({width:N,height:N,data:data.data});
+   }catch(e){reject(e);}
+   finally{URL.revokeObjectURL(url);}
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Could not decode '+file.name));};
+  img.src=url;
+ });
+}
+async function trainPhotos(){
+ if(training||!trainingPhotos.length){$('#status').textContent='Select at least one image using Choose training photos.';return;}
+ training=true;['teach1','teach100','teachPhotos','erase'].forEach(id=>$('#'+id).disabled=true);
+ try{
+  const n=trainingPhotos.length*3;let done=0;
+  for(const f of trainingPhotos)for(let variant=0;variant<3;variant++){
+   model.teach(await readImage(f,variant));done++;await showProgress('user photographs',n,done);
+  }
+  $('#status').textContent='Taught '+n+' crops from '+trainingPhotos.length+' supplied training photographs. Testing on a *different* photograph is required to claim any generalization.';
+  stats();reconstruct();
+ }catch(e){$('#status').textContent='Training error: '+e.message;}
+ finally{training=false;['teach1','teach100','teachPhotos','erase'].forEach(id=>$('#'+id).disabled=false);}
+}
+function getMask(){
+ const v=$('#occlusion').value;
+ return v==='small'?maskRectangle(4,4,4,4):v==='big'?maskRectangle(3,3,6,6):maskRectangle(4,0,4,12);
+}
+async function newTest(){
+ if($('#testType').value==='photo'){
+  if(!testingPhotos.length){$('#status2').textContent='Choose separate held-out photos before selecting photo test.';return;}
+  test=await readImage(testingPhotos[testId%testingPhotos.length]);testId++;
+ }else{
+  const world=testId%2?'parity':'opposite';
+  test=makeWorld(770000+testId*541,world);testId++;
+ }
+ reconstruct();
+}
+function reconstruct(){
+ if(!test)return;
+ mask=getMask();const visible=maskedImage(test,mask),opts={order:+$('#order').value,detail:+$('#detail').value,deformation:+$('#deformation').value};
+ const a=model.complete(visible,mask,opts),pair=model.complete(visible,mask,{...opts,order:1}),coarse=model.complete(visible,mask,{...opts,detail:0}),naive=naiveCompletion(visible,mask);
+ output=a;
+ cv('#original',test);cv('#visible',visible);cv('#baseline',naive);cv('#coarse',coarse.image);cv('#pair',pair.image);cv('#prediction',a.image);
+ const mse={groups:maskedMSE(a.image,test,mask),pairwise:maskedMSE(pair.image,test,mask),coarse:maskedMSE(coarse.image,test,mask),baseline:maskedMSE(naive,test,mask)};
+ $('#status2').textContent='Hidden-pixel MSE (smaller is better): groups '+mse.groups.toFixed(4)+'; one-context '+mse.pairwise.toFixed(4)+'; coarse only '+mse.coarse.toFixed(4)+'; untrained interpolation '+mse.baseline.toFixed(4)+'. \\nPredicted hierarchy coverage coarse/middle/fine: '+a.coverage.map(x=>Math.round(100*x)+'%').join(' / ')+'.';
+ if(selectedPatch===null||!mask.includes(selectedPatch))selectedPatch=mask[Math.floor(mask.length/2)];
+ selectPatch(selectedPatch);
+}
+function selectPatch(p){
+ selectedPatch=p;
+ if(!output)return;
+ const c=output.provenance[p],coords=(j)=>'('+j%G+','+Math.floor(j/G)+')';
+ const summary=c?'Predicted coarse atom '+c.code+' from '+c.order+' supporting parts at '+c.positions.map(coords).join(' and ')+'. Lift score '+c.score.toFixed(2)+', relation support '+c.support+', local deformation '+(c.deformation||0)+' patch cells.':'No learned relationship here; generic atom fallback.';
+ $('#selected').textContent='Hidden cell '+coords(p)+': '+summary;
+ const svg=$('#relOverlay');svg.replaceChildren();
+ const ns='http://www.w3.org/2000/svg';
+ function rect(index,color){
+  const r=document.createElementNS(ns,'rect');
+  r.setAttribute('x',index%G*P+.7);r.setAttribute('y',Math.floor(index/G)*P+.7);
+  r.setAttribute('width',P-1.4);r.setAttribute('height',P-1.4);
+  r.setAttribute('fill','none');r.setAttribute('stroke',color);r.setAttribute('stroke-width','.8');svg.append(r);
+ }
+ rect(p,'#9ae8c2');
+ if(c)for(const q of c.positions){
+  rect(q,'#f2bd80');const line=document.createElementNS(ns,'line');
+  line.setAttribute('x1',q%G*P+P/2);line.setAttribute('y1',Math.floor(q/G)*P+P/2);
+  line.setAttribute('x2',p%G*P+P/2);line.setAttribute('y2',Math.floor(p/G)*P+P/2);
+  line.setAttribute('stroke','#9ae8c2');line.setAttribute('stroke-width','.6');line.setAttribute('stroke-dasharray','1.2 1.2');svg.append(line);
+ }
+}
+async function benchmark(){
+ if(training||!testingPhotos.length){$('#benchmark').textContent='First choose held-out test photographs that were not used for teaching.';return;}
+ $('#runBenchmark').disabled=true;$('#benchmark').textContent='Measuring unseen photographs…';
+ let totals={groups:0,one:0,coarse:0,naive:0},count=0,perFile=[];
+ try{
+  for(const f of testingPhotos){
+   const truth=await readImage(f);
+   const h=maskRectangle(4,4,4,4),v=maskedImage(truth,h);
+   const preds={groups:model.complete(v,h,{order:2,deformation:1,detail:1}).image,one:model.complete(v,h,{order:1,deformation:0,detail:1}).image,coarse:model.complete(v,h,{order:2,deformation:1,detail:0}).image,naive:naiveCompletion(v,h)};
+   const errors=Object.fromEntries(Object.entries(preds).map(([key,img])=>[key,maskedMSE(img,truth,h)]));
+   for(const k in totals)totals[k]+=errors[k];
+   perFile.push(f.name+' · '+Object.entries(errors).map(([k,x])=>k+' '+x.toFixed(4)).join(' | '));
+   count++;await new Promise(resolve=>requestAnimationFrame(resolve));
+  }
+  $('#benchmark').textContent='HELD-OUT PHOTOGRAPHS · '+count+' different images\\n'+Object.entries(totals).map(([k,v])=>k+': '+(v/count).toFixed(5)).join(' · ')+'\\n'+perFile.join('\\n')+'\\nLower MSE is better. No win is assumed.';
+ }catch(e){$('#benchmark').textContent='Benchmark error: '+e.message;}
+ finally{$('#runBenchmark').disabled=false;}
+}
+$('#trainFiles').onchange=e=>{trainingPhotos=Array.from(e.target.files||[]);$('#status').textContent=trainingPhotos.length+' training photographs selected. Their pixels stay inside the browser.';};
+$('#testFiles').onchange=e=>{testingPhotos=Array.from(e.target.files||[]);$('#benchmark').textContent=testingPhotos.length+' held-out photos selected. None are automatically added to training.';};
+$('#teach1').onclick=()=>trainSynthetic(1);$('#teach100').onclick=()=>trainSynthetic(100);$('#teachPhotos').onclick=trainPhotos;
+$('#erase').onclick=()=>{if(training)return;model=new ResidueWorld();trainId=0;stats();$('#bar').style.width='0%';$('#status').textContent='All learned atoms and relation tables erased.';reconstruct();};
+$('#newTest').onclick=newTest;$('#runBenchmark').onclick=benchmark;$('#testType').onchange=newTest;$('#occlusion').onchange=reconstruct;
+for(const [id,out,label] of [['deformation','defVal',' patch'],['detail','detailVal','%'],['order','orderVal',' parts']]){
+ $('#'+id).oninput=()=>{
+  const v=$('#'+id).value;
+  $('#'+out).textContent=id==='detail'?Math.round(v*100)+'%':id==='order'?v+' '+label:v+' patch'+(v==='1'?'':'es');
+  reconstruct();
+ };
+}
+$('#visible').onclick=(event)=>{
+ const r=$('#visible').getBoundingClientRect(),x=Math.floor((event.clientX-r.left)/r.width*G),y=Math.floor((event.clientY-r.top)/r.height*G),p=y*G+x;
+ if(mask.includes(p))selectPatch(p);
+};
+stats();newTest();
+</script></body></html>
