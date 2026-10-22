@@ -52,11 +52,11 @@ console.log('ModelImage V3: all hierarchy, competitive learning, deformation, an
 // fragments at x-1 and x+1. At inference one fragment moves to x-2.
 // Individual support-to-target associations are at chance. A learned
 // flexible two-part relation should recover all four combinations.
-const rel=new ResidueWorld().groups,origin=6+6*G,r=random(99);
+const rel=new ResidueWorld().groups,origin=6+6*G,rngParity=random(99);
 for(let i=0;i<480;i++){
  const codes=Array(CELLS).fill(-1),left=i%2?2:3,right=Math.floor(i/2)%2?2:3;
  codes[origin-1]=left;codes[origin+1]=right;codes[origin]=left===right?4:5;
- rel.teach(codes,r);
+ rel.teach(codes,rngParity);
 }
 let exact=0,flexible=0;
 for(const left of [2,3])for(const right of [2,3]){
