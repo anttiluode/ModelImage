@@ -26,7 +26,7 @@ const model=new ResidueWorld({caps:[48,64,80],seed:17});
 for(const item of train)model.teach(item.image);
 const summary=model.summary();
 let totals={two:0,one:0,coarse:0,naive:0,empty:0};
-const untrained=new ResidueWorld(),byPhoto={},n=0;
+const untrained=new ResidueWorld(),byPhoto={};let n=0;
 for(const item of test){
  const id=item.name.split('_')[0],testMasks=[maskRectangle(4,4,4,4),maskRectangle(2,6,4,4)];
  byPhoto[id]??={two:0,one:0,coarse:0,naive:0,n:0};
