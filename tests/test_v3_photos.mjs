@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import {readdirSync,readFileSync} from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import {ResidueWorld,maskRectangle,maskedImage,maskedMSE,naiveCompletion,completeWithTrust} from '../v3-core.js';
-const root=process.argv[2]||'/tmp/modelimage-v3-photos';
+const root=process.argv[2]||path.join(os.tmpdir(),'modelimage-v3-photos');
 function readPPM(file){
  const raw=readFileSync(file);let at=0;
  function word(){while(raw[at]===10||raw[at]===13||raw[at]===32)at++;let s='';
