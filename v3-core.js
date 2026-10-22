@@ -252,6 +252,56 @@ export class ResidueWorld{
   two:[...this.groups.two].map(([k,v])=>[k,{n:v.n,targets:[...v.targets]}]),
   middle:[...this.middle].map(([k,v])=>[k,[...v]]),detail:[...this.detail].map(([k,v])=>[k,[...v]])};}
 }
+// Model 5-inspired evidence gate. Calibrates trust on VISIBLE pixels only,
+// by temporarily hiding known probes and comparing the learned model
+// against a nonlearned interpolation control. Never consults target pixels.
+export function completeWithTrust(model,visible,hidden,options={}){
+ const masked=new Set(hidden),naive=naiveCompletion(visible,hidden);
+ const predicted=model.complete(visible,hidden,options);
+ const candidates=[];
+ for(let p=0;p<CELLS;p++)if(!masked.has(p)){
+  const x=p%G,y=Math.floor(p/G);
+  let min=Infinity;
+  for(const m of hidden){
+   const d=Math.abs(m%G-x)+Math.abs(Math.floor(m/G)-y);
+   if(d<min)min=d;
+  }
+  if(min<=4)candidates.push({p,dist:min});
+ }
+ // Spatially distributed probes close to the unknown region.
+ candidates.sort((a,b)=>a.dist-b.dist||a.p-b.p);
+ const probes=[],used=new Set();
+ for(const {p} of candidates){
+  const group=Math.floor(p%G/3)+4*Math.floor(Math.floor(p/G)/3);
+  if(used.has(group))continue;
+  used.add(group);probes.push(p);
+  if(probes.length>=12)break;
+ }
+ let mseModel=0,mseNaive=0,measured=0;
+ for(const p of probes){
+  const extra=[...hidden,p],observation=maskedImage(visible,extra);
+  const im=model.complete(observation,extra,options).image;
+  const base=naiveCompletion(observation,extra);
+  mseModel+=maskedMSE(im,visible,[p]);
+  mseNaive+=maskedMSE(base,visible,[p]);
+  measured++;
+ }
+ mseModel/=measured||1;mseNaive/=measured||1;
+ // A conservative, scene-specific evidence weight. This can still be fooled.
+ const trust=measured>=3&&mseModel<mseNaive*.85?
+   Math.min(.85,Math.max(0,(mseNaive-mseModel)/(mseNaive+1e-8))):0;
+ const image=new Uint8ClampedArray(naive.data);
+ for(const p of hidden){
+  const x=p%G*P,y=Math.floor(p/G)*P;
+  for(let iy=0;iy<P;iy++)for(let ix=0;ix<P;ix++){
+   const k=((y+iy)*N+x+ix)*4;
+   for(let c=0;c<3;c++)image[k+c]=Math.round(naive.data[k+c]*(1-trust)+predicted.image.data[k+c]*trust);
+   image[k+3]=255;
+  }
+ }
+ return {image:{width:N,height:N,data:image},trust,probes,calibration:{measured,mseModel,mseNaive},provenance:predicted.provenance};
+}
+
 export function maskRectangle(x,y,w,h){
  const a=[];for(let iy=y;iy<y+h;iy++)for(let ix=x;ix<x+w;ix++)if(ix>=0&&iy>=0&&ix<G&&iy<G)a.push(patchIndex(ix,iy));return a;
 }
