@@ -191,7 +191,17 @@ export class MovingSieve {
    // All high-evidence predictions from this pass are committed simultaneously.
   }
   for(const p of hidden)if(codes[p]<0){const c=this.predict(codes,p,order);codes[p]=c.code;provenance[p]=c;}
-  return {codes,provenance,image:this.render(codes),observed};
+  const generated=this.render(codes);
+  // Never replace visible sensor pixels with blurry codebook reconstructions.
+  const pixels=new Uint8ClampedArray(img.data);
+  for(const p of hidden){
+   const sx=(p%GRID)*PATCH,sy=Math.floor(p/GRID)*PATCH;
+   for(let y=0;y<PATCH;y++){
+    const start=((sy+y)*WIDTH+sx)*4;
+    pixels.set(generated.data.subarray(start,start+PATCH*4),start);
+   }
+  }
+  return {codes,provenance,image:{width:WIDTH,height:WIDTH,data:pixels},observed};
  }
  render(codes){
   const parts=codes.map(c=>{
