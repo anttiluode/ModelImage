@@ -92,10 +92,11 @@ input[type=range]{width:100%;display:block;accent-color:var(--mint);margin:6px 0
 <figure><canvas id="coarse" width="96" height="96"></canvas><figcaption>Learned coarse reconstruction</figcaption></figure>
 <figure><canvas id="pair" width="96" height="96"></canvas><figcaption>One-part context + three-level synthesis</figcaption></figure>
 <figure><canvas id="prediction" width="96" height="96"></canvas><figcaption>Learned groups + coarse→middle→fine synthesis</figcaption></figure>
+<figure><canvas id="trusted" width="96" height="96"></canvas><figcaption>Trust-checked reconstruction · memory accepted or rejected</figcaption></figure>
 </div>
 <div style="height:14px"></div>
 <h3>Which learned relationship did it use?</h3>
-<p class="note">Click a hidden position on the sensor image to inspect its chosen explanation. Solid turquoise lines show fragments the predictor used. If nothing meaningful has been learned, it will fall back to a generic atom rather than invent certainty.</p>
+<p class="note">Click a hidden position on the sensor image to inspect its chosen explanation. Solid turquoise lines show fragments the predictor used. If nothing meaningful has been learned, it will fall back to a generic atom. The separate trust-checked image tests whether the learned hypothesis is reliable on still-visible pixels, and can suppress it.</p>
 <div id="selected">No relation selected yet.</div>
 <div id="status2" class="note">Mean squared pixel error is reported only inside the hidden mask. Lower is better. Visually attractive hallucinations can still score worse than simple interpolation.</div>
 </section>
@@ -107,7 +108,7 @@ input[type=range]{width:100%;display:block;accent-color:var(--mint);margin:6px 0
 </details>
 </main>
 <script type="module">
-import {N,P,G,CELLS,ResidueWorld,sieve,synthesize,maskRectangle,maskedImage,maskedMSE,naiveCompletion} from './v3-core.js';
+import {N,P,G,CELLS,ResidueWorld,sieve,synthesize,maskRectangle,maskedImage,maskedMSE,naiveCompletion,completeWithTrust} from './v3-core.js';
 import {makeWorld} from './world-core.js';
 const $=x=>document.querySelector(x);
 let model=new ResidueWorld(),training=false,trainId=0,testId=0,test=null,mask=[],output=null,trainingPhotos=[],testingPhotos=[],selectedPatch=null;
@@ -202,10 +203,10 @@ async function newTest(){
 function reconstruct(){
  if(!test)return;
  mask=getMask();const visible=maskedImage(test,mask),opts={order:+$('#order').value,detail:+$('#detail').value,deformation:+$('#deformation').value};
- const a=model.complete(visible,mask,opts),pair=model.complete(visible,mask,{...opts,order:1}),coarse=model.complete(visible,mask,{...opts,detail:0}),naive=naiveCompletion(visible,mask);
+ const a=model.complete(visible,mask,opts),pair=model.complete(visible,mask,{...opts,order:1}),coarse=model.complete(visible,mask,{...opts,detail:0}),naive=naiveCompletion(visible,mask),trusted=completeWithTrust(model,visible,mask,opts);
  output=a;
- cv('#original',test);cv('#visible',visible);cv('#baseline',naive);cv('#coarse',coarse.image);cv('#pair',pair.image);cv('#prediction',a.image);
- const mse={groups:maskedMSE(a.image,test,mask),pairwise:maskedMSE(pair.image,test,mask),coarse:maskedMSE(coarse.image,test,mask),baseline:maskedMSE(naive,test,mask)};
+ cv('#original',test);cv('#visible',visible);cv('#baseline',naive);cv('#coarse',coarse.image);cv('#pair',pair.image);cv('#prediction',a.image);cv('#trusted',trusted.image);
+ const mse={groups:maskedMSE(a.image,test,mask),trusted:maskedMSE(trusted.image,test,mask),pairwise:maskedMSE(pair.image,test,mask),coarse:maskedMSE(coarse.image,test,mask),baseline:maskedMSE(naive,test,mask)};
  $('#status2').textContent='Hidden-pixel MSE (smaller is better): groups '+mse.groups.toFixed(4)+'; one-context '+mse.pairwise.toFixed(4)+'; coarse only '+mse.coarse.toFixed(4)+'; untrained interpolation '+mse.baseline.toFixed(4)+'. \\nPredicted hierarchy coverage coarse/middle/fine: '+a.coverage.map(x=>Math.round(100*x)+'%').join(' / ')+'.';
  if(selectedPatch===null||!mask.includes(selectedPatch))selectedPatch=mask[Math.floor(mask.length/2)];
  selectPatch(selectedPatch);
@@ -235,12 +236,12 @@ function selectPatch(p){
 async function benchmark(){
  if(training||!testingPhotos.length){$('#benchmark').textContent='First choose held-out test photographs that were not used for teaching.';return;}
  $('#runBenchmark').disabled=true;$('#benchmark').textContent='Measuring unseen photographs…';
- let totals={groups:0,one:0,coarse:0,naive:0},count=0,perFile=[];
+ let totals={groups:0,one:0,coarse:0,naive:0,trusted:0},count=0,perFile=[];
  try{
   for(const f of testingPhotos){
    const truth=await readImage(f);
    const h=maskRectangle(4,4,4,4),v=maskedImage(truth,h);
-   const preds={groups:model.complete(v,h,{order:2,deformation:1,detail:1}).image,one:model.complete(v,h,{order:1,deformation:0,detail:1}).image,coarse:model.complete(v,h,{order:2,deformation:1,detail:0}).image,naive:naiveCompletion(v,h)};
+   const preds={groups:model.complete(v,h,{order:2,deformation:1,detail:1}).image,one:model.complete(v,h,{order:1,deformation:0,detail:1}).image,coarse:model.complete(v,h,{order:2,deformation:1,detail:0}).image,naive:naiveCompletion(v,h),trusted:completeWithTrust(model,v,h,{order:2,deformation:1,detail:1}).image};
    const errors=Object.fromEntries(Object.entries(preds).map(([key,img])=>[key,maskedMSE(img,truth,h)]));
    for(const k in totals)totals[k]+=errors[k];
    perFile.push(f.name+' · '+Object.entries(errors).map(([k,x])=>k+' '+x.toFixed(4)).join(' | '));
