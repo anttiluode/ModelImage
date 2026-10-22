@@ -231,6 +231,12 @@ The first completed gate measured hidden-pixel mean squared error (smaller is be
 
 The real-world wall is now measured: the model can learn a patch alphabet and repeated spatial associations yet still lack the capacity to build useful object-conditioned predictions from unfamiliar natural-image structure.
 
+### Synthetic multi-scale comparison — not all extensions help
+
+An additional exploratory 360-experience run on the V2-style synthetic face world was evaluated on 60 **new** images with the four 8×8 patches corresponding to the mouth hidden. Even though the learned spatial table contained thousands of supported candidate relations, V3's mean missing-pixel error was **0.09019** for two-support learned groups, **0.06344** for one-support groups, and **0.05814** for plain local interpolation. (Fixed seeds, deformation enabled for the two-support case.) This is a second failure of the **combined** V3 architecture, not a failure of the earlier V2 three-piece codeword demonstration.
+
+The likely bottleneck is representation alignment: the V2 glyphs occupied 16×16 coherent pieces, whereas V3 splits each glyph into four 8×8 codewords and currently conditions middle and fine residues on the coarse code alone. Identifying a conjunction in the learned coarse ledger does not yet force the generated high-frequency image to reflect the same multi-part explanation. The next research gate should explicitly compare whole-part representations, multiscale alignment, and joint conditional residue generation under matched capacities.
+
 ### GUI
 
 Run a local server with \`py -m http.server 8000\` (Windows) or \`python -m http.server 8000\`. Open **http://localhost:8000/v3.html**. Both JavaScript files use \`.js\` imports and work with the stock Python server on Windows.
