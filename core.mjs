@@ -37,7 +37,7 @@ export function synthetic(theme="face",seed=1){
    r=108+64*v+shade*.2;g=161+46*v;b=212-33*v;
    if(v>.79){r=74;g=87;b=91;}
    for(let t=0;t<5;t++){
-    const a=t*.21-.01, right=a+.18, top=.34+.11*Math.sin(2.3*t+seed*.24);
+    const a=t*.21-.01, right=a+.18, top=.34+.07*Math.sin(2.3*t)+.025*Math.sin(seed*.24+t);
     if(u>a&&u<right&&v>top&&v<.80){r=64+t*17;g=73+t*11;b=93+t*8;
       const ix=Math.floor((u-a)/.047),iy=Math.floor((v-top)/.062);
       if((u-a)% .047>.009&&(u-a)% .047<.035&&(v-top)% .062>.014&&(v-top)% .062<.048){
@@ -65,7 +65,6 @@ function feature(px){
   z[12]+=l*(x-(TILE-1)/2);z[13]+=l*(y-(TILE-1)/2);lum2+=l*l;
  }
  const area=TILE*TILE;for(let i=0;i<3;i++)z[i]/=area;
- const cellN=[36,30,30,30,25,25,30,25,25]; // overwritten by actual cell sizes below
  for(let a=0;a<3;a++)for(let b=0;b<3;b++){
   let c=0;for(let y=0;y<TILE;y++)for(let x=0;x<TILE;x++)if(Math.floor(y*3/TILE)===a&&Math.floor(x*3/TILE)===b)c++;
   z[3+a*3+b]=sums[a*3+b]/c;
