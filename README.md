@@ -137,6 +137,8 @@ A particularly useful check: presenting the **same** visible A-world scene to th
 
 **A critical caveat:** at 80 training scenes, one run had only 35/80 correct for the two-context method, versus 39/80 for the one-context method. The useful relation emerges with sufficient repeated experience; this is not magic instantaneous discovery or universally monotonic progress. The page includes a held-out 80-scene gate that is run on the exact models trained in your browser.
 
+**Shuffled-experience control:** training on the same patch motifs after randomizing their positions preserved the nine-atom dictionary, but raised held-out hidden-mouth pixel MSE from approximately **0.000012 to 0.0655**. The relational geometry, rather than just the motif vocabulary, is responsible for the result.
+
 **Nonleakage check:** swapping the target region with a blank patch before calling the inference engine produces the same predictions as giving it an intact image with those target coordinates explicitly masked. We also keep the ground truth only for evaluation and preserve all unmasked original pixels in the completed image. This is covered by the new Node test.
 
 ### Run and inspect
