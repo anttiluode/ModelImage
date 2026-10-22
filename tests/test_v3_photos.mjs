@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readdirSync,readFileSync} from 'node:fs';
 import path from 'node:path';
-import {ResidueWorld,maskRectangle,maskedImage,maskedMSE,naiveCompletion} from '../v3-core.js';
+import {ResidueWorld,maskRectangle,maskedImage,maskedMSE,naiveCompletion,completeWithTrust} from '../v3-core.js';
 const root=process.argv[2]||'/tmp/modelimage-v3-photos';
 function readPPM(file){
  const raw=readFileSync(file);let at=0;
@@ -25,7 +25,8 @@ assert.ok(test.every(x=>!names.has(x.name.split('_')[0])),'PHOTO ID leakage');
 const model=new ResidueWorld({caps:[48,64,80],seed:17});
 for(const item of train)model.teach(item.image);
 const summary=model.summary();
-let totals={two:0,one:0,coarse:0,naive:0,empty:0};
+let totals={two:0,one:0,coarse:0,naive:0,empty:0,trusted:0};
+let trustSum=0,trustNonzero=0;
 const untrained=new ResidueWorld(),byPhoto={};let n=0;
 for(const item of test){
  const id=item.name.split('_')[0],testMasks=[maskRectangle(4,4,4,4),maskRectangle(2,6,4,4)];
@@ -37,13 +38,17 @@ for(const item of test){
   const coarse=model.complete(visible,h,{order:2,detail:0});
   const naive=naiveCompletion(visible,h);
   const empty=untrained.complete(visible,h,{order:2,detail:1});
-  const evaluation={two:two.image,one:one.image,coarse:coarse.image,naive,empty:empty.image};
+  const trusted=completeWithTrust(model,visible,h,{order:2,detail:1,deformation:1});
+  trustSum+=trusted.trust;trustNonzero+=Number(trusted.trust>0);
+  const evaluation={two:two.image,one:one.image,coarse:coarse.image,naive,empty:empty.image,trusted:trusted.image};
   for(const [key,prediction] of Object.entries(evaluation)){
    const err=maskedMSE(prediction,item.image,h);
    totals[key]+=err;
    if(byPhoto[id][key]!==undefined)byPhoto[id][key]+=err;
   }
   // Nonleakage: completing an intact image with the SAME hidden mask must not change the output.
+  const alternateTrust=completeWithTrust(model,item.image,h,{order:2,detail:1,deformation:1});
+  assert.deepEqual([...alternateTrust.image.data],[...trusted.image.data],'Trust must not read the unknown region');
   const same=model.complete(item.image,h,{order:2,detail:1});
   assert.deepEqual([...two.image.data],[...same.image.data],'Hidden region was accessed by model');
   const covered=new Set(h);
@@ -59,6 +64,6 @@ for(const item of test){
 }
 for(const k in totals)totals[k]/=n;
 for(const k in byPhoto)for(const method of ['two','one','coarse','naive'])byPhoto[k][method]/=byPhoto[k].n;
-console.log(JSON.stringify({benchmark:'disjoint-photographs',trainImages:train.length,testImages:test.length,maskedTests:n,learned:summary,meanMSE:totals,perPhoto:byPhoto},null,2));
+console.log(JSON.stringify({benchmark:'disjoint-photographs',trainImages:train.length,testImages:test.length,maskedTests:n,learned:summary,meanMSE:totals,trust:{mean:trustSum/n,nonzero:trustNonzero},perPhoto:byPhoto},null,2));
 assert.ok(Object.values(totals).every(x=>Number.isFinite(x)));
 console.log('Real-photo transfer test complete (no accuracy improvement presumed).');
