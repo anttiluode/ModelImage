@@ -128,6 +128,7 @@ async function train(name,n){
    if(done%12===0||done===total){
     $('#bar').style.width=(done/total*100)+'%';
     note('Training '+name+'… '+done+'/'+total+' complete experiences. Each fragment is stored without a label; every site tests all available neighbor pairs.');
+    if(done%48===0||done===total){update();completeCurrent();}
     await new Promise(resolve=>requestAnimationFrame(resolve));
    }
   }
@@ -184,7 +185,21 @@ function completeCurrent(){
    rect.setAttribute('width',PATCH-2);rect.setAttribute('height',PATCH-2);
    rect.setAttribute('fill','none');rect.setAttribute('stroke','#eeca73');rect.setAttribute('stroke-width','1.5');
    svg.append(rect);
+   const link=document.createElementNS('http://www.w3.org/2000/svg','line');
+   link.setAttribute('x1',p%GRID*PATCH+PATCH/2);
+   link.setAttribute('y1',Math.floor(p/GRID)*PATCH+PATCH/2);
+   link.setAttribute('x2',focus%GRID*PATCH+PATCH/2);
+   link.setAttribute('y2',Math.floor(focus/GRID)*PATCH+PATCH/2);
+   link.setAttribute('stroke','#8ee3bc');link.setAttribute('stroke-width','1.1');
+   link.setAttribute('stroke-dasharray','2 2');
+   svg.append(link);
   }
+  const target=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  target.setAttribute('x',focus%GRID*PATCH+1);
+  target.setAttribute('y',Math.floor(focus/GRID)*PATCH+1);
+  target.setAttribute('width',PATCH-2);target.setAttribute('height',PATCH-2);
+  target.setAttribute('stroke','#8ee3bc');target.setAttribute('stroke-width','1.6');target.setAttribute('fill','none');
+  svg.append(target);
  }
  const mseA=maskedError(result.A.image,scene,holes),mseB=maskedError(result.B.image,scene,holes),mse1=maskedError(single.image,scene,holes);
  $('#gateLog').textContent='Current hidden region · pixel MSE (lower is better)\nA two-context: '+mseA.toFixed(4)+'\nB two-context: '+mseB.toFixed(4)+'\nA one-context: '+mse1.toFixed(4)+'\n\nThe target comes from the selected world; if the two worlds disagree, they should infer different missing pieces.';
