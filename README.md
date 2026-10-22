@@ -74,7 +74,7 @@ Garden images were inconsistent: two examples yielded **22/36 and 2/36** correct
 To reproduce basic checks on Node 22 or newer:
 
 \`\`\`bash
-node tests/test_core.js
+node tests/test_core.mjs
 node tests/test_learning.mjs
 \`\`\`
 
@@ -96,7 +96,7 @@ The natural next model is a hierarchy of latent visual atoms that proposes confi
 
 - \`core.js\` — pure deterministic image generator, descriptor, online learning, assignment energy and search.
 - \`index.html\` — interactive, self-contained GUI; does not send images to a server.
-- \`tests/test_core.js\` — invariants, pixel roundtrip, learning and animation checks.
+- \`tests/test_core.mjs\` — invariants, pixel roundtrip, learning and animation checks.
 - \`tests/test_learning.mjs\` — held-out ablations and nonleakage-related checks.
 
 MIT license. This work is a continuation of the [Sihti image lineage](https://github.com/anttiluode/SihtiImageModel5) and the higher-order relationship experiments in [ClaudeRepo1](https://github.com/anttiluode/ClaudeRepo1). Those related projects are not runtime dependencies.
