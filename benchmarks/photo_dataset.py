@@ -5,12 +5,13 @@ ARE NOT committed to this repository. Training and test image identities differ.
 Requires: pip install scikit-image pillow numpy
 """
 from pathlib import Path
+import tempfile
 import sys
 import numpy as np
 from PIL import Image
 from skimage import data
 
-OUT = Path(sys.argv[1] if len(sys.argv) > 1 else "/tmp/modelimage-v3-photos")
+OUT = Path(sys.argv[1] if len(sys.argv) > 1 else Path(tempfile.gettempdir()) / "modelimage-v3-photos")
 TRAIN = ["astronaut", "camera", "coins", "brick", "grass", "moon", "immunohistochemistry", "retina"]
 TEST = ["coffee", "chelsea", "rocket", "hubble_deep_field"]
 
