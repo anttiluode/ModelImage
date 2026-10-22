@@ -1,6 +1,6 @@
 # ModelImage — a teachable sieve image assembler
 
-**[Open the live lab once GitHub Pages is enabled](https://anttiluode.github.io/ModelImage/)** · [index.html](index.html) · [core.mjs](core.mjs) · [tests](tests/)
+**[Open the live lab once GitHub Pages is enabled](https://anttiluode.github.io/ModelImage/)** · [index.html](index.html) · [core.js](core.js) · [tests](tests/)
 
 > Break an image into fragments. Teach the system complete examples. Watch fragments of a **different** image settle into the arrangement preferred by what it learned.
 
@@ -74,7 +74,7 @@ Garden images were inconsistent: two examples yielded **22/36 and 2/36** correct
 To reproduce basic checks on Node 22 or newer:
 
 \`\`\`bash
-node tests/test_core.mjs
+node tests/test_core.js
 node tests/test_learning.mjs
 \`\`\`
 
@@ -94,9 +94,9 @@ The natural next model is a hierarchy of latent visual atoms that proposes confi
 
 ## Repository
 
-- \`core.mjs\` — pure deterministic image generator, descriptor, online learning, assignment energy and search.
+- \`core.js\` — pure deterministic image generator, descriptor, online learning, assignment energy and search.
 - \`index.html\` — interactive, self-contained GUI; does not send images to a server.
-- \`tests/test_core.mjs\` — invariants, pixel roundtrip, learning and animation checks.
+- \`tests/test_core.js\` — invariants, pixel roundtrip, learning and animation checks.
 - \`tests/test_learning.mjs\` — held-out ablations and nonleakage-related checks.
 
 MIT license. This work is a continuation of the [Sihti image lineage](https://github.com/anttiluode/SihtiImageModel5) and the higher-order relationship experiments in [ClaudeRepo1](https://github.com/anttiluode/ClaudeRepo1). Those related projects are not runtime dependencies.
@@ -152,3 +152,17 @@ To reproduce the Node tests: \`node tests/test_world.mjs\`. CI runs these alongs
 All nine source motifs recur with near-identical shape, translation occurs on a 16-pixel grid, and trained atoms are chosen from a small synthetic family. This setup makes it possible to test a higher-order relation without supplying that relation to the learner. It **does not demonstrate natural-image generalization**, full-scale object discovery, perspective invariance, a learned scale hierarchy, or generating truly unseen high-frequency texture. Capacity (24 learned atoms) and the candidate neighborhood geometry are engineered; combinatorial search beyond this small window remains unsolved.
 
 A next-stage real-image study should teach RGB patches at several scales, learn a resource-bounded set of relations with attention to context and viewpoint, use external held-out photographs, and compare to convolutional and patch-dictionary baselines at a matched memory budget. This makes the leap from an inspectable synthetic world to the proposed readable **sieve image model** measurable rather than rhetorical.
+
+
+### Running locally: JavaScript module MIME types
+
+ModelImage uses `core.js` and `world-core.js` because Python's standard `http.server` on some machines serves `.mjs` with the strict-browser-blocked content type `text/plain`. The same `.js` modules run in Node tests through the repository's `package.json` (`"type": "module"`), so the browser and CI exercise the **same source**.
+
+From an updated clone:
+
+```bash
+git pull
+py -m http.server 8000
+```
+
+Then browse http://localhost:8000/world-model.html or http://localhost:8000/ and reload with **Ctrl+F5**. If port 8000 is already running, the existing server can usually serve the updated files; restart it only if necessary. The extension-originated `contentscript.js` listener warnings are unrelated to ModelImage. If a MIME failure persists, check the network response for `world-core.js`: it should respond with JavaScript content and a JavaScript MIME type, not `text/plain` or an HTML 404 page.
